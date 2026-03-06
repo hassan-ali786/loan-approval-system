@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loan Approval System</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h1>Loan Application</h1>
+            <p>Fill your details step by step</p>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress"></div>
+        </div>
+
+        <form method="POST" class="loan-form" id="loanForm">
+            <!-- Step 1 -->
+            <div class="form-step form-step-active">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Gender</label>
+                        <select name="Gender" required>
+                            <option value="1">Male</option>
+                            <option value="0">Female</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Married</label>
+                        <select name="Married" required>
+                            <option value="1">Yes</option>
+                            <option value="0">No</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Dependents</label>
+                        <input type="number" name="Dependents" placeholder="0" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Education</label>
+                        <select name="Education" required>
+                            <option value="1">Graduate</option>
+                            <option value="0">Not Graduate</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Self Employed</label>
+                        <select name="Self_Employed" required>
+                            <option value="1">Yes</option>
+                            <option value="0">No</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="button" class="btn next-btn">Next</button>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="form-step">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Applicant Income</label>
+                        <input type="number" name="ApplicantIncome" placeholder="5000" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Coapplicant Income</label>
+                        <input type="number" name="CoapplicantIncome" placeholder="2000" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Loan Amount</label>
+                        <input type="number" name="LoanAmount" placeholder="150" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Loan Term (months)</label>
+                        <input type="number" name="Loan_Amount_Term" placeholder="360" required>
+                    </div>
+                </div>
+                <button type="button" class="btn prev-btn">Previous</button>
+                <button type="button" class="btn next-btn">Next</button>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="form-step">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Credit History</label>
+                        <select name="Credit_History" required>
+                            <option value="1">Good</option>
+                            <option value="0">Bad</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Property Area</label>
+                        <select name="Property_Area" required>
+                            <option value="2">Urban</option>
+                            <option value="1">Semiurban</option>
+                            <option value="0">Rural</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="button" class="btn prev-btn">Previous</button>
+                <button type="submit" class="btn">Submit</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script src="{{ url_for('static', filename='js/form.js') }}"></script>
+</body>
+</html>

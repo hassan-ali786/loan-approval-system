@@ -1,0 +1,135 @@
+/* Base Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+/* Body Gradient Background */
+body {
+    background: linear-gradient(135deg, #2a1a5e, #5b2a86);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* Container */
+.container {
+    width: 100%;
+    max-width: 550px;
+    padding: 20px;
+}
+
+/* Card */
+.card {
+    background: #fff;
+    border-radius: 25px;
+    padding: 35px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.3);
+}
+
+/* Card Header */
+.card-header h1 {
+    font-size: 30px;
+    color: #2a1a5e;
+    margin-bottom: 5px;
+}
+.card-header p {
+    color: #6c4d8b;
+    font-size: 15px;
+    margin-bottom: 25px;
+}
+
+/* Progress Bar */
+.progress-bar {
+    height: 10px;
+    background: #eee;
+    border-radius: 20px;
+    margin-bottom: 25px;
+    overflow: hidden;
+}
+.progress {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #8e44ad, #f1c40f);
+    transition: width 0.3s ease;
+    border-radius: 20px;
+}
+
+/* Form Steps */
+.form-step {
+    display: none;
+}
+.form-step-active {
+    display: block;
+}
+.form-row {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+.form-row .form-group {
+    flex: 1;
+    min-width: 130px;
+    text-align: left;
+}
+
+/* Labels & Inputs */
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #2a1a5e;
+}
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 15px;
+    border: 1px solid #ccc;
+    outline: none;
+    transition: all 0.3s ease;
+    background: #fdfbff;
+}
+.form-group input:focus,
+.form-group select:focus {
+    border-color: #8e44ad;
+    box-shadow: 0 0 10px rgba(142, 68, 173, 0.25);
+}
+
+/* Buttons */
+.btn {
+    padding: 14px 25px;
+    border: none;
+    border-radius: 20px;
+    background: linear-gradient(90deg, #8e44ad, #f1c40f);
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 20px;
+    display: inline-block;
+    font-size: 16px;
+    text-decoration: none;
+}
+.btn:hover {
+    background: linear-gradient(90deg, #f1c40f, #8e44ad);
+    transform: translateY(-2px);
+}
+
+/* Result Page */
+.result-card .result-text {
+    font-size: 26px;
+    font-weight: 700;
+    color: #8e44ad;
+    margin: 25px 0;
+}
