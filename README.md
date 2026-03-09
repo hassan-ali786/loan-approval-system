@@ -134,28 +134,14 @@ http://127.0.0.1:5000
 ---
 
 ## Technical Stack
-
-**Programming Language**
-
-Python
-
-**Machine Learning**
-
-Scikit-learn
-Pandas
-NumPy
-
-**Backend**
-
-Flask
-
-**Frontend**
-
-HTML
-CSS
-JavaScript
-
----
+![Python](https://img.shields.io/badge/Python-3.x-blue?logo=python)
+![Flask](https://img.shields.io/badge/Flask-Web%20Framework-black?logo=flask)
+![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-ML-orange?logo=scikit-learn)
+![Pandas](https://img.shields.io/badge/Pandas-Data%20Analysis-purple?logo=pandas)
+![NumPy](https://img.shields.io/badge/NumPy-Numerical%20Computing-blue?logo=numpy)
+![HTML](https://img.shields.io/badge/HTML-Frontend-red?logo=html5)
+![CSS](https://img.shields.io/badge/CSS-Styling-blue?logo=css3)
+![JavaScript](https://img.shields.io/badge/JavaScript-Frontend-yellow?logo=javascript)
 
 ## Requirements
 
