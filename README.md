@@ -182,3 +182,8 @@ This project demonstrates the ability to build a **complete machine learning app
 * real-time prediction system
 
 It highlights practical skills required for **data science and machine learning engineering roles**.
+
+## Live Demo
+
+**Try the application here:**  
+https://loan-approval-system--hassanmlcoder.replit.app
