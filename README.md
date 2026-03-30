@@ -166,6 +166,7 @@ gunicorn==21.2.0
 ## Author
 
 Hassan Ali
+Data Science and Machine Learning Enthusiast
 
 GitHub: https://github.com/Hassan-Ali786
 
