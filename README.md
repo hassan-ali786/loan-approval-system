@@ -87,7 +87,7 @@ README.md
 
 ### 1. Clone the Repository
 
-git clone https://github.com/YourUsername/Loan-Approval-Prediction.git
+git clone https://github.com/hassan-ali786/Loan-Approval-Prediction.git
 
 cd Loan-Approval-Prediction
 
