@@ -168,7 +168,7 @@ gunicorn==21.2.0
 Hassan Ali
 Data Science and Machine Learning Enthusiast
 
-GitHub: https://github.com/Hassan-Ali786
+GitHub: https://github.com/hassan-ali786
 
 ---
 
