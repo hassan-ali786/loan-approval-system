@@ -168,7 +168,7 @@ GitHub: https://github.com/hassan-ali786
 
 ## Project Purpose
 
-This project demonstrates the ability to build a **complete machine learning application**, combining:
+This project demonstrates the ability to build a complete machine learning application, combining:
 
 * data preprocessing
 * model training
@@ -176,9 +176,9 @@ This project demonstrates the ability to build a **complete machine learning app
 * frontend design
 * real-time prediction system
 
-It highlights practical skills required for **data science and machine learning engineering roles**.
+It highlights practical skills required for data science and machine learning engineering roles.
 
 ## Live Demo
 
-**Try the application here:**  
+Try the application here:
 https://loan-approval-system--hassanmlcoder.replit.app
