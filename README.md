@@ -60,26 +60,22 @@ These features are used to train the machine learning model.
 ## Project Structure
 
 Loan_Approval_System/
-
-app.py
-train_model.py
-
-dataset/
-  loan_data.csv
-
-model/
-  loan_model.pkl
-
-templates/
-  index.html
-  result.html
-
-static/
-  css/style.css
-  js/form.js
-
-requirements.txt
-README.md
+├── app.py
+├── train_model.py
+├── dataset/
+│   └── loan_data.csv
+├── model/
+│   └── loan_model.pkl
+├── templates/
+│   ├── index.html
+│   └── result.html
+├── static/
+│   ├── css/
+│   │   └── style.css
+│   └── js/
+│       └── form.js
+├── requirements.txt
+└── README.md
 
 ---
 
