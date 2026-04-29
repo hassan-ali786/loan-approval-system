@@ -203,7 +203,4 @@ It highlights practical skills required for **data science and machine learning 
 
 ---
 
-## Live Demo
 
-**Try the application here:**
-https://loan-approval-system--hassanmlcoder.replit.app
