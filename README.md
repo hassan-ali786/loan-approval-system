@@ -91,7 +91,7 @@ Loan_Approval_System/
 ### 1. Clone the Repository
 ```bash
 git clone https://github.com/hassan-ali786/loan-approval-prediction.git
-cd Loan-Approval-Prediction
+cd loan-approval-prediction
 ```
 
 ---
