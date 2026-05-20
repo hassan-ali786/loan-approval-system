@@ -159,6 +159,21 @@ http://127.0.0.1:5000
 
 ---
 
+## Project Purpose
+
+This project demonstrates the ability to build a **complete machine learning application**, combining:
+
+* data preprocessing
+* model training
+* backend development
+* frontend design
+* real-time prediction system
+
+It highlights practical skills required for **data science and machine learning engineering roles**.
+
+---
+
+
 ## Requirements
 ```
 Flask==2.3.5
@@ -186,20 +201,6 @@ Hassan Ali
 Data Scientist & Machine Learning 
 
 GitHub: https://github.com/hassan-ali786
-
----
-
-## Project Purpose
-
-This project demonstrates the ability to build a **complete machine learning application**, combining:
-
-* data preprocessing
-* model training
-* backend development
-* frontend design
-* real-time prediction system
-
-It highlights practical skills required for **data science and machine learning engineering roles**.
 
 ---
 
