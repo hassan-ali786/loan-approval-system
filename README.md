@@ -61,9 +61,6 @@ These features are used to train the machine learning model.
 ```
 loan_approval_system/
 │
-├── app.py
-├── train_model.py
-│
 ├── dataset/
 │   └── loan_data.csv
 │
@@ -78,7 +75,9 @@ loan_approval_system/
 │   ├── css/
 │   │   └── style.css
 │   └── js/
-│       └── form.js
+│    └── form.js
+├── app.py
+├── train_model.py
 │
 ├── requirements.txt
 ├── gitignore
