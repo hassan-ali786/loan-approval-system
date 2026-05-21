@@ -59,7 +59,7 @@ These features are used to train the machine learning model.
 
 ## Project Structure
 ```
-Loan_Approval_System/
+loan_approval_system/
 │
 ├── app.py
 ├── train_model.py
