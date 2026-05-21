@@ -81,6 +81,7 @@ Loan_Approval_System/
 │       └── form.js
 │
 ├── requirements.txt
+├── gitignore
 └── README.md
 ```
 
