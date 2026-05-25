@@ -173,18 +173,6 @@ It highlights practical skills required for **data science and machine learning 
 
 ---
 
-
-## Requirements
-```
-Flask==2.3.5
-pandas==2.1.1
-scikit-learn==1.3.2
-numpy==1.26.5
-gunicorn==21.2.0
-```
-
----
-
 ## Future Improvements
 
 * Implement advanced models such as **XGBoost or LightGBM**
