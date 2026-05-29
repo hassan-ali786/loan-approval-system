@@ -63,6 +63,7 @@ loan_approval_system/
 │
 ├── dataset/
 │   └── train.csv
+│   └── test.csv
 │
 ├── model/
 │   └── loan_model.pkl
