@@ -62,7 +62,7 @@ These features are used to train the machine learning model.
 loan_approval_system/
 │
 ├── dataset/
-│   └── loan_data.csv
+│   └── train.csv
 │
 ├── model/
 │   └── loan_model.pkl
