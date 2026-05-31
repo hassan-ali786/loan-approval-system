@@ -10,6 +10,15 @@ The system allows users to enter applicant information through an interactive we
 
 ---
 
+## Video Demo:
+
+
+https://github.com/user-attachments/assets/e33417bf-384f-41e9-a908-f6ab358bc934
+
+
+
+---
+
 ## Features
 
 * **Machine Learning Prediction**
