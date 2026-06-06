@@ -197,7 +197,7 @@ It highlights practical skills required for **data science and machine learning 
 
 Hassan Ali
 
-Data Scientist & Machine Learning Engineer
+Data Scientist & ML Engineer
 
 
 ---
