@@ -5,12 +5,32 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Loan Result</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 <div class="container">
     <div class="card result-card">
-        <h1>Loan Result</h1>
-        <p class="result-text">{{ result }}</p>
+
+        {% if result == "Approved" %}
+            <div class="result-icon approved-icon">✅</div>
+            <h1 class="result-heading approved">Loan Approved!</h1>
+        {% else %}
+            <div class="result-icon rejected-icon">❌</div>
+            <h1 class="result-heading rejected">Loan Rejected</h1>
+        {% endif %}
+
+        <p class="result-subtext">Model Confidence</p>
+        <div class="confidence-bar-wrap">
+            <div class="confidence-bar" style="width: {{ probability }}%"></div>
+        </div>
+        <p class="confidence-label">{{ probability }}%</p>
+
+        {% if result == "Approved" %}
+            <p class="result-note">Your application looks good. A bank representative may contact you for further verification.</p>
+        {% else %}
+            <p class="result-note">Based on the provided details, the loan could not be approved. Consider improving your credit history or applying with a co-applicant.</p>
+        {% endif %}
+
         <a href="/" class="btn">Apply Again</a>
     </div>
 </div>
