@@ -15,6 +15,12 @@
             <p>Fill your details step by step</p>
         </div>
 
+        {% if error %}
+        <div class="error-box">{{ error }}</div>
+        {% endif %}
+
+        <div class="step-counter">Step <span id="stepNum">1</span> of 3</div>
+
         <div class="progress-bar">
             <div class="progress"></div>
         </div>
@@ -39,7 +45,7 @@
                     </div>
                     <div class="form-group">
                         <label>Dependents</label>
-                        <input type="number" name="Dependents" placeholder="0" required>
+                        <input type="number" name="Dependents" placeholder="0" min="0" max="10" required>
                     </div>
                 </div>
                 <div class="form-row">
@@ -58,7 +64,7 @@
                         </select>
                     </div>
                 </div>
-                <button type="button" class="btn next-btn">Next</button>
+                <button type="button" class="btn next-btn">Next →</button>
             </div>
 
             <!-- Step 2 -->
@@ -66,25 +72,25 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Applicant Income</label>
-                        <input type="number" name="ApplicantIncome" placeholder="5000" required>
+                        <input type="number" name="ApplicantIncome" placeholder="5000" min="0" required>
                     </div>
                     <div class="form-group">
                         <label>Coapplicant Income</label>
-                        <input type="number" name="CoapplicantIncome" placeholder="2000" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Loan Amount</label>
-                        <input type="number" name="LoanAmount" placeholder="150" required>
+                        <input type="number" name="CoapplicantIncome" placeholder="0" min="0" required>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
+                        <label>Loan Amount (thousands)</label>
+                        <input type="number" name="LoanAmount" placeholder="150" min="1" required>
+                    </div>
+                    <div class="form-group">
                         <label>Loan Term (months)</label>
-                        <input type="number" name="Loan_Amount_Term" placeholder="360" required>
+                        <input type="number" name="Loan_Amount_Term" placeholder="360" min="12" required>
                     </div>
                 </div>
-                <button type="button" class="btn prev-btn">Previous</button>
-                <button type="button" class="btn next-btn">Next</button>
+                <button type="button" class="btn prev-btn">← Back</button>
+                <button type="button" class="btn next-btn">Next →</button>
             </div>
 
             <!-- Step 3 -->
@@ -93,8 +99,8 @@
                     <div class="form-group">
                         <label>Credit History</label>
                         <select name="Credit_History" required>
-                            <option value="1">Good</option>
-                            <option value="0">Bad</option>
+                            <option value="1">Good (meets guidelines)</option>
+                            <option value="0">Bad (does not meet)</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -106,8 +112,8 @@
                         </select>
                     </div>
                 </div>
-                <button type="button" class="btn prev-btn">Previous</button>
-                <button type="submit" class="btn">Submit</button>
+                <button type="button" class="btn prev-btn">← Back</button>
+                <button type="submit" class="btn submit-btn">Check Eligibility</button>
             </div>
         </form>
     </div>
