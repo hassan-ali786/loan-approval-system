@@ -25,40 +25,40 @@
             <div class="progress"></div>
         </div>
 
-        <form method="POST" class="loan-form" id="loanForm">
+        <form method="POST" class="loan-form" id="loanForm" novalidate>
             <!-- Step 1 -->
             <div class="form-step form-step-active">
                 <div class="form-row">
                     <div class="form-group">
                         <label>Gender</label>
-                        <select name="Gender" required>
+                        <select name="Gender">
                             <option value="1">Male</option>
                             <option value="0">Female</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label>Married</label>
-                        <select name="Married" required>
+                        <select name="Married">
                             <option value="1">Yes</option>
                             <option value="0">No</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label>Dependents</label>
-                        <input type="number" name="Dependents" placeholder="0" min="0" max="10" required>
+                        <input type="number" name="Dependents" placeholder="0" min="0" max="10" value="0">
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label>Education</label>
-                        <select name="Education" required>
+                        <select name="Education">
                             <option value="1">Graduate</option>
                             <option value="0">Not Graduate</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label>Self Employed</label>
-                        <select name="Self_Employed" required>
+                        <select name="Self_Employed">
                             <option value="1">Yes</option>
                             <option value="0">No</option>
                         </select>
@@ -72,21 +72,21 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Applicant Income</label>
-                        <input type="number" name="ApplicantIncome" placeholder="5000" min="0" required>
+                        <input type="number" name="ApplicantIncome" placeholder="5000" min="0" value="0">
                     </div>
                     <div class="form-group">
                         <label>Coapplicant Income</label>
-                        <input type="number" name="CoapplicantIncome" placeholder="0" min="0" required>
+                        <input type="number" name="CoapplicantIncome" placeholder="0" min="0" value="0">
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label>Loan Amount (thousands)</label>
-                        <input type="number" name="LoanAmount" placeholder="150" min="1" required>
+                        <input type="number" name="LoanAmount" placeholder="150" min="1" value="150">
                     </div>
                     <div class="form-group">
                         <label>Loan Term (months)</label>
-                        <input type="number" name="Loan_Amount_Term" placeholder="360" min="12" required>
+                        <input type="number" name="Loan_Amount_Term" placeholder="360" min="12" value="360">
                     </div>
                 </div>
                 <button type="button" class="btn prev-btn">← Back</button>
@@ -98,14 +98,14 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Credit History</label>
-                        <select name="Credit_History" required>
+                        <select name="Credit_History">
                             <option value="1">Good (meets guidelines)</option>
                             <option value="0">Bad (does not meet)</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label>Property Area</label>
-                        <select name="Property_Area" required>
+                        <select name="Property_Area">
                             <option value="2">Urban</option>
                             <option value="1">Semiurban</option>
                             <option value="0">Rural</option>
