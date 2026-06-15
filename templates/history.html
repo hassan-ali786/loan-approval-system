@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LoanIQ — History</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-logo">Loan<span>IQ</span></div>
+    <div class="nav-links">
+        <a href="/">Apply</a>
+        <a href="/history">History</a>
+        <a href="/dashboard">Dashboard</a>
+    </div>
+</nav>
+
+<div class="container-wide">
+    <div class="card">
+        <div class="card-header">
+            <h1>Prediction History</h1>
+            <p>Last 50 applications processed</p>
+            <div class="gold-line"></div>
+        </div>
+
+        {% if rows %}
+        <div class="table-wrap">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Time</th>
+                        <th>Decision</th>
+                        <th>Confidence</th>
+                        <th>Income</th>
+                        <th>Loan Amt</th>
+                        <th>Credit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for row in rows %}
+                <tr>
+                    <td style="color:var(--muted); font-family:'DM Mono',monospace;">{{ row[0] }}</td>
+                    <td style="color:var(--muted); font-size:12px;">{{ row[1] }}</td>
+                    <td>
+                        <span class="pill {% if row[2] == 'Approved' %}pill-approved{% else %}pill-rejected{% endif %}">
+                            {% if row[2] == 'Approved' %}✓{% else %}✕{% endif %} {{ row[2] }}
+                        </span>
+                    </td>
+                    <td style="font-family:'DM Mono',monospace; color:var(--gold);">{{ row[3] }}%</td>
+                    <td style="font-family:'DM Mono',monospace;">{{ row[4] }}</td>
+                    <td style="font-family:'DM Mono',monospace;">{{ row[5] }}k</td>
+                    <td>
+                        <span class="pill {% if row[6] == 1 %}pill-approved{% else %}pill-rejected{% endif %}">
+                            {% if row[6] == 1 %}Good{% else %}Poor{% endif %}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No predictions yet.</p>
+            <a href="/" class="btn btn-primary">Make First Application</a>
+        </div>
+        {% endif %}
+
+        <div class="result-actions" style="margin-top:24px;">
+            <a href="/" class="btn btn-primary">New Application</a>
+            <a href="/dashboard" class="btn btn-ghost">Dashboard</a>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

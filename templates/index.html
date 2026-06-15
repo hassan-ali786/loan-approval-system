@@ -3,16 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Loan Approval System</title>
+<title>LoanIQ — Loan Eligibility Check</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+
+<nav class="navbar">
+    <div class="nav-logo">Loan<span>IQ</span></div>
+    <div class="nav-links">
+        <a href="/">Apply</a>
+        <a href="/history">History</a>
+        <a href="/dashboard">Dashboard</a>
+    </div>
+</nav>
+
 <div class="container">
     <div class="card">
         <div class="card-header">
-            <h1>Loan Application</h1>
-            <p>Fill your details step by step</p>
+            <h1>Loan Eligibility Check</h1>
+            <p>Answer a few questions — get an instant decision</p>
+            <div class="gold-line"></div>
         </div>
 
         {% if error %}
@@ -20,13 +30,11 @@
         {% endif %}
 
         <div class="step-counter">Step <span id="stepNum">1</span> of 3</div>
+        <div class="progress-bar"><div class="progress"></div></div>
 
-        <div class="progress-bar">
-            <div class="progress"></div>
-        </div>
+        <form method="POST" id="loanForm" novalidate>
 
-        <form method="POST" class="loan-form" id="loanForm" novalidate>
-            <!-- Step 1 -->
+            <!-- Step 1: Personal Info -->
             <div class="form-step form-step-active">
                 <div class="form-row">
                     <div class="form-group">
@@ -37,18 +45,18 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Married</label>
+                        <label>Marital Status</label>
                         <select name="Married">
-                            <option value="1">Yes</option>
-                            <option value="0">No</option>
+                            <option value="1">Married</option>
+                            <option value="0">Single</option>
                         </select>
                     </div>
+                </div>
+                <div class="form-row">
                     <div class="form-group">
                         <label>Dependents</label>
                         <input type="number" name="Dependents" placeholder="0" min="0" max="10" value="0">
                     </div>
-                </div>
-                <div class="form-row">
                     <div class="form-group">
                         <label>Education</label>
                         <select name="Education">
@@ -59,23 +67,25 @@
                     <div class="form-group">
                         <label>Self Employed</label>
                         <select name="Self_Employed">
-                            <option value="1">Yes</option>
                             <option value="0">No</option>
+                            <option value="1">Yes</option>
                         </select>
                     </div>
                 </div>
-                <button type="button" class="btn next-btn">Next →</button>
+                <div class="btn-row">
+                    <button type="button" class="btn btn-primary next-btn">Next →</button>
+                </div>
             </div>
 
-            <!-- Step 2 -->
+            <!-- Step 2: Financial Info -->
             <div class="form-step">
                 <div class="form-row">
                     <div class="form-group">
                         <label>Applicant Income</label>
-                        <input type="number" name="ApplicantIncome" placeholder="5000" min="0" value="0">
+                        <input type="number" name="ApplicantIncome" placeholder="5000" min="0" value="5000">
                     </div>
                     <div class="form-group">
-                        <label>Coapplicant Income</label>
+                        <label>Co-applicant Income</label>
                         <input type="number" name="CoapplicantIncome" placeholder="0" min="0" value="0">
                     </div>
                 </div>
@@ -89,35 +99,41 @@
                         <input type="number" name="Loan_Amount_Term" placeholder="360" min="12" value="360">
                     </div>
                 </div>
-                <button type="button" class="btn prev-btn">← Back</button>
-                <button type="button" class="btn next-btn">Next →</button>
+                <div class="btn-row">
+                    <button type="button" class="btn btn-ghost prev-btn">← Back</button>
+                    <button type="button" class="btn btn-primary next-btn">Next →</button>
+                </div>
             </div>
 
-            <!-- Step 3 -->
+            <!-- Step 3: Loan Details -->
             <div class="form-step">
                 <div class="form-row">
                     <div class="form-group">
                         <label>Credit History</label>
                         <select name="Credit_History">
-                            <option value="1">Good (meets guidelines)</option>
-                            <option value="0">Bad (does not meet)</option>
+                            <option value="1">Good — meets guidelines</option>
+                            <option value="0">Poor — does not meet</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label>Property Area</label>
                         <select name="Property_Area">
                             <option value="2">Urban</option>
-                            <option value="1">Semiurban</option>
+                            <option value="1">Semi-urban</option>
                             <option value="0">Rural</option>
                         </select>
                     </div>
                 </div>
-                <button type="button" class="btn prev-btn">← Back</button>
-                <button type="submit" class="btn submit-btn">Check Eligibility</button>
+                <div class="btn-row">
+                    <button type="button" class="btn btn-ghost prev-btn">← Back</button>
+                    <button type="submit" class="btn btn-submit">Check Eligibility</button>
+                </div>
             </div>
+
         </form>
     </div>
 </div>
+
 <script src="{{ url_for('static', filename='js/form.js') }}"></script>
 </body>
 </html>

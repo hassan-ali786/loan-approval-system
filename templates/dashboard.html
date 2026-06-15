@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LoanIQ — Dashboard</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-logo">Loan<span>IQ</span></div>
+    <div class="nav-links">
+        <a href="/">Apply</a>
+        <a href="/history">History</a>
+        <a href="/dashboard">Dashboard</a>
+    </div>
+</nav>
+
+<div class="container-wide">
+    <div class="card">
+        <div class="card-header">
+            <h1>Dashboard</h1>
+            <p>Overview of all processed applications</p>
+            <div class="gold-line"></div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-box-label">Approved</div>
+                <div class="stat-box-num green">{{ approved }}</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-box-label">Rejected</div>
+                <div class="stat-box-num red">{{ rejected }}</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-box-label">Avg Confidence</div>
+                <div class="stat-box-num gold">{{ avg_prob }}%</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-box-label">Avg Loan Amount</div>
+                <div class="stat-box-num">{{ avg_loan }}k</div>
+            </div>
+        </div>
+
+        <div class="chart-wrap">
+            <canvas id="pieChart" width="260" height="260"></canvas>
+        </div>
+
+        <div class="result-actions">
+            <a href="/" class="btn btn-primary">New Application</a>
+            <a href="/history" class="btn btn-ghost">View History</a>
+        </div>
+    </div>
+</div>
+
+<script>
+const ctx = document.getElementById('pieChart').getContext('2d');
+new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Approved', 'Rejected'],
+        datasets: [{
+            data: [{{ approved }}, {{ rejected }}],
+            backgroundColor: ['rgba(46,204,113,0.85)', 'rgba(231,76,60,0.85)'],
+            borderColor: ['#152233', '#152233'],
+            borderWidth: 3
+        }]
+    },
+    options: {
+        cutout: '70%',
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    color: '#8A9BB0',
+                    font: { family: 'DM Sans', size: 13 },
+                    padding: 20
+                }
+            }
+        }
+    }
+});
+</script>
+</body>
+</html>

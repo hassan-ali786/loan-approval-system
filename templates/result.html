@@ -3,35 +3,70 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Loan Result</title>
+<title>LoanIQ — Result</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+
+<nav class="navbar">
+    <div class="nav-logo">Loan<span>IQ</span></div>
+    <div class="nav-links">
+        <a href="/">Apply</a>
+        <a href="/history">History</a>
+        <a href="/dashboard">Dashboard</a>
+    </div>
+</nav>
+
 <div class="container">
     <div class="card result-card">
 
         {% if result == "Approved" %}
-            <div class="result-icon approved-icon">✅</div>
-            <h1 class="result-heading approved">Loan Approved!</h1>
+            <div class="result-badge badge-approved">✓ Approved</div>
+            <div class="result-amount approved">{{ probability }}%</div>
+            <div class="result-label">Approval confidence score</div>
         {% else %}
-            <div class="result-icon rejected-icon">❌</div>
-            <h1 class="result-heading rejected">Loan Rejected</h1>
+            <div class="result-badge badge-rejected">✕ Rejected</div>
+            <div class="result-amount rejected">{{ probability }}%</div>
+            <div class="result-label">Rejection confidence score</div>
         {% endif %}
 
-        <p class="result-subtext">Model Confidence</p>
-        <div class="confidence-bar-wrap">
-            <div class="confidence-bar" style="width: {{ probability }}%"></div>
+        <div class="confidence-wrap">
+            <div class="confidence-title">Model Confidence</div>
+            <div class="confidence-bar-wrap">
+                <div class="confidence-bar" style="width: {{ probability }}%"></div>
+            </div>
+            <div class="confidence-pct">{{ probability }}%</div>
         </div>
-        <p class="confidence-label">{{ probability }}%</p>
 
-        {% if result == "Approved" %}
-            <p class="result-note">Your application looks good. A bank representative may contact you for further verification.</p>
-        {% else %}
-            <p class="result-note">Based on the provided details, the loan could not be approved. Consider improving your credit history or applying with a co-applicant.</p>
-        {% endif %}
+        <div class="shap-section">
+            <div class="shap-title">Decision Factors</div>
+            <div class="shap-subtitle">Top features that influenced this result</div>
+            {% for f in top_factors %}
+            <div class="shap-row">
+                <span class="shap-name">{{ f.feature }}</span>
+                <div class="shap-bar-wrap">
+                    <div class="shap-bar {% if f.value > 0 %}shap-pos{% else %}shap-neg{% endif %}"
+                         style="width: {{ f.width }}%"></div>
+                </div>
+                <span class="shap-val">{{ f.value }}</span>
+            </div>
+            {% endfor %}
+        </div>
 
-        <a href="/" class="btn">Apply Again</a>
+        <div class="result-note">
+            {% if result == "Approved" %}
+            Your application profile meets the lending criteria. A bank representative may contact you for document verification before final approval.
+            {% else %}
+            Your current profile did not meet the lending criteria. Key areas to improve: credit history, total income, or applying with a co-applicant may increase your chances.
+            {% endif %}
+        </div>
+
+        <div class="result-actions">
+            <a href="/" class="btn btn-primary">Apply Again</a>
+            <a href="/history" class="btn btn-ghost">History</a>
+            <a href="/dashboard" class="btn btn-ghost">Dashboard</a>
+        </div>
+
     </div>
 </div>
 </body>
