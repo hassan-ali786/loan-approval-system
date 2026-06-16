@@ -518,3 +518,79 @@ body {
     .stats-grid { grid-template-columns: 1fr; }
     .shap-name { width: 110px; }
 }
+
+/* ========================
+   LIGHT THEME VARIABLES
+   ======================== */
+:root[data-theme="light"] {
+    --navy:    #F0F4F8;
+    --slate:   #FFFFFF;
+    --slate2:  #E8EDF2;
+    --card-bg: #FFFFFF;
+    --white:   #0D1B2A;
+    --muted:   #5A6A7A;
+    --border:  rgba(0,0,0,0.08);
+}
+:root[data-theme="light"] body {
+    background: #E8EDF2;
+}
+:root[data-theme="light"] .form-group input,
+:root[data-theme="light"] .form-group select {
+    background: #F5F8FF;
+    color: #0D1B2A;
+    border-color: #D0D8E4;
+}
+:root[data-theme="light"] .history-table th {
+    background: #F0F4F8;
+}
+:root[data-theme="light"] .nav-logo { color: #8B6914; }
+
+/* ========================
+   THEME TOGGLE BUTTON
+   ======================== */
+.theme-btn {
+    background: var(--slate2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    transition: background 0.2s;
+}
+.theme-btn:hover { background: var(--slate); }
+
+/* ========================
+   LOADING OVERLAY
+   ======================== */
+.loading-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(13,27,42,0.85);
+    z-index: 999;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    backdrop-filter: blur(4px);
+}
+.loading-overlay.active { display: flex; }
+
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid var(--slate2);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+.loading-text {
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+}
