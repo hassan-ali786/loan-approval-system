@@ -8,12 +8,20 @@
 </head>
 <body>
 
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Analyzing your application...</div>
+</div>
+
 <nav class="navbar">
     <div class="nav-logo">Loan<span>IQ</span></div>
     <div class="nav-links">
         <a href="/">Apply</a>
         <a href="/history">History</a>
         <a href="/dashboard">Dashboard</a>
+        <a href="/calculator">EMI Calc</a>
+        <button class="theme-btn" id="themeToggle">☀️</button>
     </div>
 </nav>
 
@@ -135,5 +143,6 @@
 </div>
 
 <script src="{{ url_for('static', filename='js/form.js') }}"></script>
+<script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 </body>
 </html>
