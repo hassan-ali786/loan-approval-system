@@ -15,6 +15,8 @@
         <a href="/">Apply</a>
         <a href="/history">History</a>
         <a href="/dashboard">Dashboard</a>
+        <a href="/calculator">EMI Calc</a>
+        <button class="theme-btn" id="themeToggle">☀️</button>
     </div>
 </nav>
 
@@ -45,41 +47,73 @@
             </div>
         </div>
 
+        <!-- Approval Doughnut -->
+        <div class="section-label" style="margin:24px 0 12px; font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em;">Approval Breakdown</div>
         <div class="chart-wrap">
             <canvas id="pieChart" width="260" height="260"></canvas>
         </div>
 
-        <div class="result-actions">
+        <!-- Feature Importance Bar Chart -->
+        <div class="section-label" style="margin:24px 0 12px; font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em;">Feature Importance</div>
+        <div class="chart-wrap" style="padding: 24px 16px;">
+            <canvas id="fiChart"></canvas>
+        </div>
+
+        <div class="result-actions" style="margin-top:24px;">
             <a href="/" class="btn btn-primary">New Application</a>
             <a href="/history" class="btn btn-ghost">View History</a>
         </div>
     </div>
 </div>
 
+<script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 <script>
-const ctx = document.getElementById('pieChart').getContext('2d');
-new Chart(ctx, {
+// Doughnut chart
+const ctx1 = document.getElementById('pieChart').getContext('2d');
+new Chart(ctx1, {
     type: 'doughnut',
     data: {
         labels: ['Approved', 'Rejected'],
         datasets: [{
             data: [{{ approved }}, {{ rejected }}],
             backgroundColor: ['rgba(46,204,113,0.85)', 'rgba(231,76,60,0.85)'],
-            borderColor: ['#152233', '#152233'],
+            borderColor: ['#152233','#152233'],
             borderWidth: 3
         }]
     },
     options: {
         cutout: '70%',
         plugins: {
-            legend: {
-                position: 'bottom',
-                labels: {
-                    color: '#8A9BB0',
-                    font: { family: 'DM Sans', size: 13 },
-                    padding: 20
-                }
-            }
+            legend: { position: 'bottom', labels: { color: '#8A9BB0', font: { family: 'DM Sans', size: 13 }, padding: 20 } }
+        }
+    }
+});
+
+// Feature Importance bar chart
+const fiLabels = {{ fi_labels | safe }};
+const fiValues = {{ fi_values | safe }};
+const ctx2 = document.getElementById('fiChart').getContext('2d');
+new Chart(ctx2, {
+    type: 'bar',
+    data: {
+        labels: fiLabels,
+        datasets: [{
+            label: 'Importance (%)',
+            data: fiValues,
+            backgroundColor: 'rgba(201,168,76,0.7)',
+            borderColor: 'rgba(201,168,76,1)',
+            borderWidth: 1,
+            borderRadius: 6
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            x: { ticks: { color: '#8A9BB0' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+            y: { ticks: { color: '#F5F8FF', font: { family: 'DM Mono', size: 11 } }, grid: { display: false } }
         }
     }
 });
