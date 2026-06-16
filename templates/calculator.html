@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LoanIQ — EMI Calculator</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-logo">Loan<span>IQ</span></div>
+    <div class="nav-links">
+        <a href="/">Apply</a>
+        <a href="/history">History</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/calculator">EMI Calc</a>
+        <button class="theme-btn" id="themeToggle">☀️</button>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h1>EMI Calculator</h1>
+            <p>Calculate your monthly loan installment</p>
+            <div class="gold-line"></div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Loan Amount (₹)</label>
+                <input type="number" id="loanAmt" placeholder="500000" value="500000" min="1">
+            </div>
+            <div class="form-group">
+                <label>Annual Interest Rate (%)</label>
+                <input type="number" id="rate" placeholder="8.5" value="8.5" step="0.1" min="0.1">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Loan Tenure (months)</label>
+                <input type="number" id="tenure" placeholder="360" value="360" min="1">
+            </div>
+        </div>
+
+        <div class="btn-row">
+            <button class="btn btn-primary" onclick="calcEMI()">Calculate EMI</button>
+            <button class="btn btn-ghost" onclick="resetCalc()">Reset</button>
+        </div>
+
+        <div class="emi-result" id="emiResult" style="display:none; margin-top:28px;">
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-box-label">Monthly EMI</div>
+                    <div class="stat-box-num gold" id="emiVal">—</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-box-label">Total Payment</div>
+                    <div class="stat-box-num" id="totalVal">—</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-box-label">Principal</div>
+                    <div class="stat-box-num green" id="principalVal">—</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-box-label">Total Interest</div>
+                    <div class="stat-box-num red" id="interestVal">—</div>
+                </div>
+            </div>
+
+            <div class="chart-wrap" style="margin-top:20px;">
+                <canvas id="emiChart" width="260" height="260"></canvas>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+<script>
+let emiChart = null;
+
+function fmt(n) {
+    return '₹' + Math.round(n).toLocaleString('en-IN');
+}
+
+function calcEMI() {
+    const P = parseFloat(document.getElementById('loanAmt').value);
+    const r = parseFloat(document.getElementById('rate').value) / 12 / 100;
+    const n = parseInt(document.getElementById('tenure').value);
+
+    if (!P || !r || !n) return;
+
+    const emi = (P * r * Math.pow(1+r, n)) / (Math.pow(1+r, n) - 1);
+    const total = emi * n;
+    const interest = total - P;
+
+    document.getElementById('emiVal').textContent       = fmt(emi);
+    document.getElementById('totalVal').textContent     = fmt(total);
+    document.getElementById('principalVal').textContent = fmt(P);
+    document.getElementById('interestVal').textContent  = fmt(interest);
+    document.getElementById('emiResult').style.display  = 'block';
+
+    // Chart
+    const ctx = document.getElementById('emiChart').getContext('2d');
+    if (emiChart) emiChart.destroy();
+    emiChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Principal', 'Interest'],
+            datasets: [{
+                data: [Math.round(P), Math.round(interest)],
+                backgroundColor: ['rgba(46,204,113,0.85)', 'rgba(231,76,60,0.85)'],
+                borderColor: ['#152233','#152233'],
+                borderWidth: 3
+            }]
+        },
+        options: {
+            cutout: '70%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: '#8A9BB0', font: { family: 'DM Sans', size: 13 }, padding: 20 }
+                }
+            }
+        }
+    });
+}
+
+function resetCalc() {
+    document.getElementById('loanAmt').value = '500000';
+    document.getElementById('rate').value    = '8.5';
+    document.getElementById('tenure').value  = '360';
+    document.getElementById('emiResult').style.display = 'none';
+}
+
+// Auto calc on load
+calcEMI();
+</script>
+</body>
+</html>
