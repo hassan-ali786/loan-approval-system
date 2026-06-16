@@ -1,6 +1,6 @@
-# LoanIQ — Loan Approval Prediction System
+# LoanIQ — AI-Powered Loan Approval Prediction System
 
-> An end-to-end ML web application that predicts loan approval with explainable AI, prediction history, and an analytics dashboard.
+> An end-to-end ML web application that predicts loan approval with explainable AI, prediction history, EMI calculator, PDF reports, and an analytics dashboard.
 
 ---
 
@@ -12,11 +12,16 @@ https://github.com/user-attachments/assets/e33417bf-384f-41e9-a908-f6ab358bc934
 
 ## Features
 
-- **XGBoost Model** — upgraded from Random Forest with feature engineering (EMI, Total Income, Loan-Income Ratio)
-- **SHAP Explainability** — shows top 5 factors behind every decision
-- **Confidence Score** — model probability displayed on result page
+- **XGBoost / LightGBM / Random Forest** — auto-selects best model via 5-fold cross-validation
+- **Feature Engineering** — EMI ratio, Total Income, Loan-Income Ratio, Income Per Dependent
+- **SHAP Explainability** — top 5 factors behind every decision with visual bars
+- **Confidence Score** — model probability on every result
+- **PDF Report Download** — formatted loan decision report with SHAP factors
+- **EMI Calculator** — monthly installment calculator with principal vs interest chart
 - **Prediction History** — every application saved to SQLite, viewable at `/history`
-- **Analytics Dashboard** — approved vs rejected counts, avg confidence, avg loan amount with doughnut chart at `/dashboard`
+- **Analytics Dashboard** — approved/rejected stats, avg confidence, feature importance chart at `/dashboard`
+- **Dark / Light Theme Toggle** — persists across sessions via localStorage
+- **Loading Animation** — spinner on form submit
 - **Multi-step Form** — 3-step form with progress bar and error handling
 - **Premium Fintech UI** — dark navy + gold theme, fully responsive
 
@@ -28,7 +33,8 @@ https://github.com/user-attachments/assets/e33417bf-384f-41e9-a908-f6ab358bc934
 |--------|-------|
 | Accuracy | ~82% |
 | Recall (Approved) | ~0.89 |
-| Model | XGBoost |
+| CV Folds | 5-fold Stratified |
+| Best Model | Auto-selected (RF / XGBoost / LightGBM) |
 | Features | 15 (11 original + 4 engineered) |
 
 ---
@@ -54,24 +60,26 @@ Loan-Approval-System/
 │   └── test.csv
 │
 ├── model/
-│   ├── loan_model.pkl
-│   └── features.pkl
+│   ├── loan_model.pkl        ← best model (auto-selected)
+│   └── features.pkl          ← feature list
 │
 ├── templates/
-│   ├── index.html       ← multi-step application form
-│   ├── result.html      ← prediction result + SHAP factors
-│   ├── history.html     ← past predictions table
-│   └── dashboard.html   ← analytics dashboard
+│   ├── index.html            ← multi-step application form
+│   ├── result.html           ← prediction result + SHAP + PDF download
+│   ├── history.html          ← past predictions table
+│   ├── dashboard.html        ← analytics + feature importance chart
+│   └── calculator.html       ← EMI calculator
 │
 ├── static/
 │   ├── css/
-│   │   └── style.css
+│   │   └── style.css         ← dark/light theme
 │   └── js/
-│       └── form.js
+│       ├── form.js           ← multi-step form logic
+│       └── theme.js          ← theme toggle + loading animation
 │
-├── app.py               ← Flask routes + SHAP + SQLite
-├── train_model.py       ← XGBoost training pipeline
-├── history.db           ← auto-created SQLite database
+├── app.py                    ← Flask routes, SHAP, SQLite, PDF
+├── train_model.py            ← RF vs XGBoost vs LightGBM + CV
+├── history.db                ← auto-created SQLite database
 ├── requirements.txt
 └── README.md
 ```
@@ -84,7 +92,9 @@ Loan-Approval-System/
 |-----|-------------|
 | `/` | Loan application form |
 | `/history` | Last 50 predictions |
-| `/dashboard` | Analytics + charts |
+| `/dashboard` | Analytics + feature importance chart |
+| `/calculator` | EMI calculator |
+| `/download-report` | PDF report of last prediction |
 
 ---
 
@@ -130,19 +140,19 @@ http://127.0.0.1:5000
 ![Python](https://img.shields.io/badge/Python-3.x-blue?logo=python)
 ![Flask](https://img.shields.io/badge/Flask-Web%20Framework-black?logo=flask)
 ![XGBoost](https://img.shields.io/badge/XGBoost-ML%20Model-orange)
-![SHAP](https://img.shields.io/badge/SHAP-Explainability-green)
+![LightGBM](https://img.shields.io/badge/LightGBM-ML%20Model-green)
+![SHAP](https://img.shields.io/badge/SHAP-Explainability-purple)
 ![SQLite](https://img.shields.io/badge/SQLite-Database-lightgrey?logo=sqlite)
+![ReportLab](https://img.shields.io/badge/ReportLab-PDF%20Reports-red)
 ![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-Preprocessing-orange?logo=scikit-learn)
 ![Pandas](https://img.shields.io/badge/Pandas-Data%20Analysis-purple?logo=pandas)
 ![Chart.js](https://img.shields.io/badge/Chart.js-Dashboard-red)
-![HTML](https://img.shields.io/badge/HTML-Frontend-red?logo=html5)
-![CSS](https://img.shields.io/badge/CSS-Styling-blue?logo=css3)
 
 ---
 
 ## Dataset
 
-Kaggle — Loan Prediction Problem Dataset
+Kaggle — Loan Prediction Problem Dataset  
 https://www.kaggle.com/datasets/altruistdelhite04/loan-prediction-problem-dataset
 
 ---
