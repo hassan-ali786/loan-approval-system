@@ -594,3 +594,31 @@ body {
     font-weight: 500;
     letter-spacing: 0.05em;
 }
+
+/* ========================
+   RISK SCORE ROW
+   ======================== */
+.risk-score-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+.risk-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* ========================
+   SECTION LABEL
+   ======================== */
+.section-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 24px 0 12px;
+}
