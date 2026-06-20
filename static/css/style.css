@@ -622,3 +622,74 @@ body {
     letter-spacing: 0.08em;
     margin: 24px 0 12px;
 }
+
+/* ========================
+   COMPARE GRID
+   ======================== */
+.compare-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 16px;
+}
+.compare-col {
+    background: var(--slate);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+}
+.compare-col-header {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 16px;
+    font-family: 'DM Mono', monospace;
+}
+.compare-result-col {
+    background: var(--slate);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+}
+.compare-approved { border-color: rgba(46,204,113,0.3); }
+.compare-rejected { border-color: rgba(231,76,60,0.3); }
+.compare-result-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+}
+.compare-result-decision {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 16px;
+}
+.compare-result-decision.approved { color: var(--mint); }
+.compare-result-decision.rejected { color: var(--red); }
+.compare-result-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--white);
+}
+.compare-result-row span:first-child { color: var(--muted); }
+.compare-result-row:last-child { border-bottom: none; }
+
+@media (max-width: 700px) {
+    .compare-grid { grid-template-columns: 1fr; }
+}
+
+/* ========================
+   NAVBAR LOGOUT LINK
+   ======================== */
+.nav-links a[href="/logout"] {
+    color: var(--red);
+    opacity: 0.8;
+}
+.nav-links a[href="/logout"]:hover { opacity: 1; }
