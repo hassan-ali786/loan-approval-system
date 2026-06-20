@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LoanIQ — Compare Scenarios</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-logo">Loan<span>IQ</span></div>
+    <div class="nav-links">
+        <a href="/">Apply</a>
+        <a href="/compare">Compare</a>
+        <a href="/history">History</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/calculator">EMI Calc</a>
+        <a href="/logout" style="color:var(--red);">Logout</a>
+        <button class="theme-btn" id="themeToggle">☀️</button>
+    </div>
+</nav>
+
+<div class="container-wide">
+    <div class="card">
+        <div class="card-header">
+            <h1>Loan Scenario Comparison</h1>
+            <p>Compare up to 3 loan scenarios side by side</p>
+            <div class="gold-line"></div>
+        </div>
+
+        <form method="POST">
+            <div class="compare-grid">
+                {% for i in [1, 2, 3] %}
+                <div class="compare-col">
+                    <div class="compare-col-header">Scenario {{ i }}</div>
+                    <div class="form-group">
+                        <label>Applicant Income</label>
+                        <input type="number" name="ApplicantIncome_{{ i }}" placeholder="5000" value="5000" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Co-applicant Income</label>
+                        <input type="number" name="CoapplicantIncome_{{ i }}" placeholder="0" value="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Loan Amount (k)</label>
+                        <input type="number" name="LoanAmount_{{ i }}" placeholder="150" value="150" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Loan Term (months)</label>
+                        <input type="number" name="Loan_Amount_Term_{{ i }}" placeholder="360" value="360" min="12">
+                    </div>
+                    <div class="form-group">
+                        <label>Dependents</label>
+                        <input type="number" name="Dependents_{{ i }}" placeholder="0" value="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Credit History</label>
+                        <select name="Credit_History_{{ i }}">
+                            <option value="1">Good</option>
+                            <option value="0">Poor</option>
+                        </select>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="btn-row" style="margin-top:20px;">
+                <button type="submit" class="btn btn-primary">Compare Scenarios</button>
+                <a href="/" class="btn btn-ghost">Back to Form</a>
+            </div>
+        </form>
+
+        {% if results %}
+        <div class="section-label" style="margin-top:32px;">Comparison Results</div>
+        <div class="compare-grid">
+            {% for s in results %}
+            <div class="compare-result-col {% if s.result == 'Approved' %}compare-approved{% else %}compare-rejected{% endif %}">
+                <div class="compare-result-label">{{ s.label }}</div>
+                <div class="compare-result-decision {% if s.result == 'Approved' %}approved{% else %}rejected{% endif %}">
+                    {{ s.result }}
+                </div>
+                <div class="compare-result-row"><span>Confidence</span><span>{{ s.probability }}%</span></div>
+                <div class="compare-result-row"><span>Risk Score</span><span>{{ s.risk_score }} / 100</span></div>
+                <div class="compare-result-row"><span>Max Loan</span><span>{{ s.max_loan }}k</span></div>
+                <div class="compare-result-row"><span>EMI</span><span>{{ s.emi }}k/mo</span></div>
+                <div class="compare-result-row"><span>Credit</span><span>{{ s.credit }}</span></div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+</body>
+</html>
