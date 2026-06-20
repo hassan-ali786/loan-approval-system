@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LoanIQ — Sign Up</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-logo">Loan<span>IQ</span></div>
+    <div class="nav-links">
+        <button class="theme-btn" id="themeToggle">☀️</button>
+    </div>
+</nav>
+
+<div class="container" style="max-width:420px;">
+    <div class="card">
+        <div class="card-header">
+            <h1>Create Account</h1>
+            <p>Start checking your loan eligibility</p>
+            <div class="gold-line"></div>
+        </div>
+
+        {% if error %}
+        <div class="error-box">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" name="username" placeholder="Hassan Ali" required>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" name="email" placeholder="you@example.com" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" placeholder="Min 6 characters" required>
+            </div>
+            <div class="btn-row" style="margin-top:8px;">
+                <button type="submit" class="btn btn-submit" style="width:100%; justify-content:center;">
+                    Create Account
+                </button>
+            </div>
+        </form>
+
+        <p style="text-align:center; margin-top:20px; font-size:13px; color:var(--muted);">
+            Already have an account?
+            <a href="/login" style="color:var(--gold); text-decoration:none; font-weight:600;">Sign In</a>
+        </p>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+</body>
+</html>
