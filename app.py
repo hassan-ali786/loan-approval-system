@@ -25,8 +25,8 @@ app.secret_key = "loaniq-secret-key-2024"
 # Flask-Login setup
 # ─────────────────────────────────────────
 login_manager = LoginManager(app)
-login_manager.login_view        = "login"
-login_manager.login_message     = "Please log in to access this page."
+login_manager.login_view        = "welcome"
+login_manager.login_message     = None
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -35,12 +35,14 @@ def load_user(user_id):
 # ─────────────────────────────────────────
 # Flask-Mail setup (configure your SMTP)
 # ─────────────────────────────────────────
+import os
+
 app.config['MAIL_SERVER']   = 'smtp.gmail.com'
 app.config['MAIL_PORT']     = 587
 app.config['MAIL_USE_TLS']  = True
-app.config['MAIL_USERNAME'] = 'your-email@gmail.com'   # ← change this
-app.config['MAIL_PASSWORD'] = 'your-app-password'      # ← change this
-app.config['MAIL_DEFAULT_SENDER'] = 'LoanIQ <your-email@gmail.com>'
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', 'your-email@gmail.com')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', 'your-app-password')
+app.config['MAIL_DEFAULT_SENDER'] = f"LoanIQ <{app.config['MAIL_USERNAME']}>"
 mail = Mail(app)
 
 # ─────────────────────────────────────────
@@ -187,6 +189,14 @@ def logout():
 # ─────────────────────────────────────────
 # Main routes
 # ─────────────────────────────────────────
+@app.route("/welcome")
+def welcome():
+    """Public landing page — shown to logged-out visitors."""
+    if current_user.is_authenticated:
+        return redirect(url_for("home"))
+    return render_template("landing.html")
+
+
 @app.route("/", methods=["GET", "POST"])
 @login_required
 def home():
@@ -283,13 +293,18 @@ def home():
 @app.route("/history")
 @login_required
 def history():
-    """Show last 50 predictions for logged-in user."""
+    """Show last 50 predictions for logged-in user. Supports ?filter=Approved/Rejected."""
+    filter_result = request.args.get('filter')
     conn = sqlite3.connect("history.db")
     c    = conn.cursor()
-    c.execute("SELECT * FROM predictions WHERE user_id = ? ORDER BY id DESC LIMIT 50", (current_user.id,))
+    if filter_result in ("Approved", "Rejected"):
+        c.execute("SELECT * FROM predictions WHERE user_id = ? AND result = ? ORDER BY id DESC LIMIT 50",
+                   (current_user.id, filter_result))
+    else:
+        c.execute("SELECT * FROM predictions WHERE user_id = ? ORDER BY id DESC LIMIT 50", (current_user.id,))
     rows = c.fetchall()
     conn.close()
-    return render_template("history.html", rows=rows)
+    return render_template("history.html", rows=rows, active_filter=filter_result)
 
 
 @app.route("/export-csv")
@@ -506,4 +521,5 @@ def download_report():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, use_reloader=False)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True, use_reloader=False)

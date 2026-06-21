@@ -15,6 +15,8 @@
         <a href="/history">History</a>
         <a href="/dashboard">Dashboard</a>
         <a href="/calculator">EMI Calc</a>
+        <a href="/compare">Compare</a>
+        <a href="/logout">Logout</a>
         <button class="theme-btn" id="themeToggle">☀️</button>
     </div>
 </nav>
@@ -24,7 +26,9 @@
         <div class="card-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
             <div>
                 <h1>Prediction History</h1>
-                <p>Last 50 applications processed</p>
+                <p>
+                    {% if active_filter %}Showing {{ active_filter }} only · <a href="/history" style="color:var(--gold);">Clear filter</a>{% else %}Last 50 applications processed{% endif %}
+                </p>
                 <div class="gold-line"></div>
             </div>
             <!-- CSV Export Button -->

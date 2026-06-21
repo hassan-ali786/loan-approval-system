@@ -16,6 +16,8 @@
         <a href="/history">History</a>
         <a href="/dashboard">Dashboard</a>
         <a href="/calculator">EMI Calc</a>
+        <a href="/compare">Compare</a>
+        <a href="/logout">Logout</a>
         <button class="theme-btn" id="themeToggle">☀️</button>
     </div>
 </nav>
@@ -28,13 +30,12 @@
             <div class="gold-line"></div>
         </div>
 
-        <!-- Stats Grid -->
         <div class="stats-grid">
-            <div class="stat-box">
+            <div class="stat-box clickable" id="statApproved">
                 <div class="stat-box-label">Approved</div>
                 <div class="stat-box-num green">{{ approved }}</div>
             </div>
-            <div class="stat-box">
+            <div class="stat-box clickable" id="statRejected">
                 <div class="stat-box-label">Rejected</div>
                 <div class="stat-box-num red">{{ rejected }}</div>
             </div>
@@ -48,20 +49,17 @@
             </div>
         </div>
 
-        <!-- Approval Doughnut -->
-        <div class="section-label">Approval Breakdown</div>
+        <div class="section-label">Approval Breakdown — click a slice to filter history</div>
         <div class="chart-wrap">
             <canvas id="pieChart" width="260" height="260"></canvas>
         </div>
 
-        <!-- Monthly Trend Line Chart -->
         <div class="section-label" style="margin-top:24px;">Monthly Trend (Last 30 Days)</div>
         <div class="chart-wrap" style="padding:24px 16px;">
             <canvas id="trendChart"></canvas>
         </div>
 
-        <!-- Feature Importance Bar Chart -->
-        <div class="section-label" style="margin-top:24px;">Feature Importance</div>
+        <div class="section-label" style="margin-top:24px;">Feature Importance — hover for exact %</div>
         <div class="chart-wrap" style="padding:24px 16px;">
             <canvas id="fiChart"></canvas>
         </div>
@@ -76,24 +74,55 @@
 
 <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 <script>
-// ── Approval doughnut ──────────────────────────
-new Chart(document.getElementById('pieChart').getContext('2d'), {
+// Shared tooltip styling for a cohesive, branded look
+const tooltipBase = {
+    backgroundColor: '#0D1B2A',
+    titleColor: '#C9A84C',
+    bodyColor: '#F5F8FF',
+    borderColor: 'rgba(201,168,76,0.3)',
+    borderWidth: 1,
+    padding: 12,
+    titleFont: { family: 'DM Mono', size: 12, weight: '600' },
+    bodyFont:  { family: 'DM Sans', size: 12 },
+    cornerRadius: 8,
+    displayColors: true
+};
+
+// ── Approval doughnut — click-to-filter ────────
+const pieChart = new Chart(document.getElementById('pieChart').getContext('2d'), {
     type: 'doughnut',
     data: {
         labels: ['Approved', 'Rejected'],
         datasets: [{
             data: [{{ approved }}, {{ rejected }}],
             backgroundColor: ['rgba(46,204,113,0.85)', 'rgba(231,76,60,0.85)'],
+            hoverBackgroundColor: ['rgba(46,204,113,1)', 'rgba(231,76,60,1)'],
             borderColor: ['#152233', '#152233'],
-            borderWidth: 3
+            borderWidth: 3,
+            hoverOffset: 8
         }]
     },
     options: {
         cutout: '70%',
+        onHover: (event, elements) => {
+            event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+        },
+        onClick: (event, elements) => {
+            if (elements.length) {
+                const label = elements[0].index === 0 ? 'Approved' : 'Rejected';
+                window.location.href = '/history?filter=' + label;
+            }
+        },
         plugins: {
             legend: {
                 position: 'bottom',
                 labels: { color: '#8A9BB0', font: { family: 'DM Sans', size: 13 }, padding: 20 }
+            },
+            tooltip: {
+                ...tooltipBase,
+                callbacks: {
+                    label: (ctx) => `${ctx.label}: ${ctx.parsed} applications`
+                }
             }
         }
     }
@@ -116,6 +145,10 @@ new Chart(document.getElementById('trendChart').getContext('2d'), {
                 backgroundColor: 'rgba(46,204,113,0.08)',
                 borderWidth: 2,
                 pointRadius: 4,
+                pointHoverRadius: 7,
+                pointBackgroundColor: 'rgba(46,204,113,1)',
+                pointBorderColor: '#152233',
+                pointBorderWidth: 2,
                 fill: true,
                 tension: 0.4
             },
@@ -126,16 +159,27 @@ new Chart(document.getElementById('trendChart').getContext('2d'), {
                 backgroundColor: 'rgba(231,76,60,0.08)',
                 borderWidth: 2,
                 pointRadius: 4,
+                pointHoverRadius: 7,
+                pointBackgroundColor: 'rgba(231,76,60,1)',
+                pointBorderColor: '#152233',
+                pointBorderWidth: 2,
                 fill: true,
                 tension: 0.4
             }
         ]
     },
     options: {
+        interaction: { mode: 'index', intersect: false },
         plugins: {
             legend: {
                 position: 'bottom',
                 labels: { color: '#8A9BB0', font: { family: 'DM Sans', size: 13 }, padding: 20 }
+            },
+            tooltip: {
+                ...tooltipBase,
+                callbacks: {
+                    title: (items) => `Date: ${items[0].label}`
+                }
             }
         },
         scales: {
@@ -145,7 +189,7 @@ new Chart(document.getElementById('trendChart').getContext('2d'), {
     }
 });
 
-// ── Feature importance horizontal bar ─────────
+// ── Feature importance horizontal bar — hover highlight ──
 const fiLabels = {{ fi_labels | safe }};
 const fiValues = {{ fi_values | safe }};
 
@@ -157,6 +201,7 @@ new Chart(document.getElementById('fiChart').getContext('2d'), {
             label: 'Importance (%)',
             data: fiValues,
             backgroundColor: 'rgba(201,168,76,0.7)',
+            hoverBackgroundColor: 'rgba(232,199,106,0.95)',
             borderColor:     'rgba(201,168,76,1)',
             borderWidth: 1,
             borderRadius: 6
@@ -164,12 +209,31 @@ new Chart(document.getElementById('fiChart').getContext('2d'), {
     },
     options: {
         indexAxis: 'y',
-        plugins: { legend: { display: false } },
+        onHover: (event, elements) => {
+            event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+        },
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                ...tooltipBase,
+                callbacks: {
+                    label: (ctx) => `Importance: ${ctx.parsed.x}%`
+                }
+            }
+        },
         scales: {
             x: { ticks: { color: '#8A9BB0' }, grid: { color: 'rgba(255,255,255,0.05)' } },
             y: { ticks: { color: '#F5F8FF', font: { family: 'DM Mono', size: 11 } }, grid: { display: false } }
         }
     }
+});
+
+// ── Stat box click-to-filter (mirrors doughnut behavior) ──
+document.getElementById('statApproved').addEventListener('click', () => {
+    window.location.href = '/history?filter=Approved';
+});
+document.getElementById('statRejected').addEventListener('click', () => {
+    window.location.href = '/history?filter=Rejected';
 });
 </script>
 </body>
