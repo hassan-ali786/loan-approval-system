@@ -16,7 +16,7 @@
         <a href="/dashboard">Dashboard</a>
         <a href="/calculator">EMI Calc</a>
         <a href="/compare">Compare</a>
-        <a href="/logout">Logout</a>-
+        <a href="/logout">Logout</a>
         <button class="theme-btn" id="themeToggle">☀️</button>
     </div>
 </nav>
@@ -88,6 +88,10 @@ function fmt(n) {
     return '₹' + Math.round(n).toLocaleString('en-IN');
 }
 
+function getThemeTextColor() {
+    return document.documentElement.getAttribute('data-theme') === 'light' ? '#5A6A7A' : '#8A9BB0';
+}
+
 function calcEMI() {
     const P = parseFloat(document.getElementById('loanAmt').value);
     const r = parseFloat(document.getElementById('rate').value) / 12 / 100;
@@ -124,7 +128,7 @@ function calcEMI() {
             plugins: {
                 legend: {
                     position: 'bottom',
-                    labels: { color: '#8A9BB0', font: { family: 'DM Sans', size: 13 }, padding: 20 }
+                    labels: { color: getThemeTextColor(), font: { family: 'DM Sans', size: 13 }, padding: 20 }
                 }
             }
         }

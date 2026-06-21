@@ -544,6 +544,25 @@ body {
     background: #F0F4F8;
 }
 :root[data-theme="light"] .nav-logo { color: #8B6914; }
+:root[data-theme="light"] .demo-card,
+:root[data-theme="light"] .feature-card,
+:root[data-theme="light"] .chart-wrap,
+:root[data-theme="light"] .stat-box,
+:root[data-theme="light"] .shap-section,
+:root[data-theme="light"] .confidence-wrap,
+:root[data-theme="light"] .compare-col,
+:root[data-theme="light"] .compare-result-col {
+    background: #FFFFFF;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+}
+:root[data-theme="light"] .shap-bar-wrap,
+:root[data-theme="light"] .confidence-bar-wrap,
+:root[data-theme="light"] .demo-bar-wrap,
+:root[data-theme="light"] .demo-confidence-bar-wrap,
+:root[data-theme="light"] .demo-factor-bar-wrap,
+:root[data-theme="light"] .progress-bar {
+    background: #E8EDF2;
+}
 
 /* ========================
    THEME TOGGLE BUTTON

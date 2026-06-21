@@ -75,6 +75,12 @@
 <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 <script>
 // Shared tooltip styling for a cohesive, branded look
+// Read live theme colors so charts adapt to dark/light mode
+const isLight   = document.documentElement.getAttribute('data-theme') === 'light';
+const textColor = isLight ? '#5A6A7A' : '#8A9BB0';
+const tickColor = isLight ? '#0D1B2A' : '#F5F8FF';
+const gridColor = isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.04)';
+
 const tooltipBase = {
     backgroundColor: '#0D1B2A',
     titleColor: '#C9A84C',
@@ -116,7 +122,7 @@ const pieChart = new Chart(document.getElementById('pieChart').getContext('2d'),
         plugins: {
             legend: {
                 position: 'bottom',
-                labels: { color: '#8A9BB0', font: { family: 'DM Sans', size: 13 }, padding: 20 }
+                labels: { color: textColor, font: { family: 'DM Sans', size: 13 }, padding: 20 }
             },
             tooltip: {
                 ...tooltipBase,
@@ -173,7 +179,7 @@ new Chart(document.getElementById('trendChart').getContext('2d'), {
         plugins: {
             legend: {
                 position: 'bottom',
-                labels: { color: '#8A9BB0', font: { family: 'DM Sans', size: 13 }, padding: 20 }
+                labels: { color: textColor, font: { family: 'DM Sans', size: 13 }, padding: 20 }
             },
             tooltip: {
                 ...tooltipBase,
@@ -183,8 +189,8 @@ new Chart(document.getElementById('trendChart').getContext('2d'), {
             }
         },
         scales: {
-            x: { ticks: { color: '#8A9BB0', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
-            y: { ticks: { color: '#8A9BB0', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true }
+            x: { ticks: { color: textColor, font: { size: 11 } }, grid: { color: gridColor } },
+            y: { ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor }, beginAtZero: true }
         }
     }
 });
@@ -222,8 +228,8 @@ new Chart(document.getElementById('fiChart').getContext('2d'), {
             }
         },
         scales: {
-            x: { ticks: { color: '#8A9BB0' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-            y: { ticks: { color: '#F5F8FF', font: { family: 'DM Mono', size: 11 } }, grid: { display: false } }
+            x: { ticks: { color: textColor }, grid: { color: gridColor } },
+            y: { ticks: { color: tickColor, font: { family: 'DM Mono', size: 11 } }, grid: { display: false } }
         }
     }
 });

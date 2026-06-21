@@ -157,7 +157,7 @@ def signup():
         if len(password) < 6:
             return render_template("signup.html", error="Password must be at least 6 characters.")
         if create_user(username, email, password):
-            return redirect(url_for("login") + "?registered=1")
+            return redirect(url_for("login", registered=1))
         return render_template("signup.html", error="Username or email already taken.")
     return render_template("signup.html")
 
@@ -426,6 +426,7 @@ def compare():
 
 
 @app.route("/calculator")
+@login_required
 def calculator():
     return render_template("calculator.html")
 
@@ -453,7 +454,7 @@ def download_report():
 
     elements = [
         Paragraph("LoanIQ — Loan Decision Report", title_s),
-        Paragraph(f"Generated: {data['timestamp']}  |  User: {current_user.username}", sub_s),
+        Paragraph(f"Generated: {data['timestamp']}  |  User: {getattr(current_user, 'username', 'N/A')}", sub_s),
         Spacer(1, 0.3*cm),
         Paragraph("Decision Summary", head_s),
         Table([
