@@ -693,3 +693,190 @@ body {
     opacity: 0.8;
 }
 .nav-links a[href="/logout"]:hover { opacity: 1; }
+
+/* ========================
+   PAGE LOAD TRANSITION
+   ======================== */
+.card {
+    animation: cardFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes cardFadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.stat-box, .feature-card, .compare-col, .compare-result-col {
+    animation: cardFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+.stats-grid .stat-box:nth-child(1) { animation-delay: 0.05s; }
+.stats-grid .stat-box:nth-child(2) { animation-delay: 0.1s; }
+.stats-grid .stat-box:nth-child(3) { animation-delay: 0.15s; }
+.stats-grid .stat-box:nth-child(4) { animation-delay: 0.2s; }
+
+/* ========================
+   FORM STEP TRANSITION
+   ======================== */
+.form-step-active {
+    animation: stepSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes stepSlideIn {
+    from { opacity: 0; transform: translateX(12px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ========================
+   MICRO-INTERACTIONS
+   ======================== */
+.btn {
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+}
+.btn:active {
+    transform: scale(0.97) !important;
+}
+
+.form-group input,
+.form-group select {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+.form-group input:focus,
+.form-group select:focus {
+    transform: translateY(-1px);
+}
+
+.stat-box, .feature-card {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.stat-box:hover, .feature-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+}
+
+.history-table tr {
+    transition: background 0.15s ease;
+}
+
+.pill, .result-badge, .badge-approved, .badge-rejected {
+    transition: transform 0.2s ease;
+}
+
+/* Confidence/SHAP bars already animate width — add a subtle ease-out on load */
+.confidence-bar, .shap-bar, .progress {
+    animation: barGrow 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes barGrow {
+    from { width: 0 !important; }
+}
+
+/* Nav link underline hover */
+.nav-links a:not(.btn) {
+    position: relative;
+}
+.nav-links a:not(.btn)::after {
+    content: '';
+    position: absolute;
+    left: 0; bottom: -4px;
+    width: 0; height: 1px;
+    background: var(--gold);
+    transition: width 0.2s ease;
+}
+.nav-links a:not(.btn):hover::after {
+    width: 100%;
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ========================
+   IMPROVED MOBILE RESPONSIVENESS
+   ======================== */
+@media (max-width: 540px) {
+    /* Navbar */
+    .navbar {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0;
+        padding: 0 4px;
+    }
+    .nav-links {
+        gap: 12px;
+        font-size: 12px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+    .nav-links a { font-size: 12px; }
+    .nav-logo { font-size: 15px; }
+
+    /* Cards */
+    .card { padding: 20px 16px; border-radius: 16px; }
+    .card-header h1 { font-size: 21px; }
+    .card-header p { font-size: 13px; }
+
+    /* Form */
+    .form-row { flex-direction: column; gap: 0; }
+    .form-group { min-width: 100%; }
+    .btn-row { flex-direction: column; }
+    .btn-row .btn { width: 100%; justify-content: center; }
+
+    /* Result page */
+    .result-amount { font-size: 36px; }
+    .shap-name { width: 90px; font-size: 11px; }
+    .shap-val { width: 42px; font-size: 10px; }
+    .result-actions { flex-direction: column; }
+    .result-actions .btn { width: 100%; justify-content: center; }
+
+    /* Stats grid */
+    .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat-box { padding: 14px; }
+    .stat-box-num { font-size: 24px; }
+
+    /* History table — horizontal scroll with visible affordance */
+    .table-wrap {
+        position: relative;
+        -webkit-overflow-scrolling: touch;
+    }
+    .history-table { font-size: 12px; }
+    .history-table th, .history-table td { padding: 9px 10px; }
+
+    /* Compare grid */
+    .compare-grid { grid-template-columns: 1fr; }
+
+    /* Chart containers */
+    .chart-wrap { padding: 14px 8px; }
+    .chart-wrap canvas { max-width: 100%; }
+
+    /* Landing page */
+    .hero-title { font-size: 32px; }
+    .hero-sub { font-size: 14px; }
+    .hero-actions { flex-direction: column; }
+    .hero-actions .btn { width: 100%; justify-content: center; }
+    .demo-card { max-width: 100%; }
+}
+
+@media (max-width: 380px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .nav-links { gap: 8px; }
+    .theme-btn { padding: 4px 8px; font-size: 14px; }
+}
+
+/* Tablet range */
+@media (min-width: 541px) and (max-width: 860px) {
+    .container-wide { max-width: 95%; }
+    .compare-grid { grid-template-columns: 1fr 1fr; }
+    .stats-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* ========================
+   CLICKABLE STAT BOXES
+   ======================== */
+.stat-box.clickable {
+    cursor: pointer;
+}
+.stat-box.clickable:hover {
+    border-color: var(--gold);
+}
