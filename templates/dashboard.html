@@ -12,11 +12,17 @@
 <nav class="navbar">
     <div class="nav-logo">Loan<span>IQ</span></div>
     <div class="nav-links">
+        {% if current_user.is_admin %}
+        <a href="/admin">Admin Panel</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/history">All History</a>
+        {% else %}
         <a href="/">Apply</a>
         <a href="/history">History</a>
         <a href="/dashboard">Dashboard</a>
         <a href="/calculator">EMI Calc</a>
         <a href="/compare">Compare</a>
+        {% endif %}
         <a href="/logout">Logout</a>
         <button class="theme-btn" id="themeToggle">☀️</button>
     </div>

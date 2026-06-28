@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LoanIQ — Result</title>
+<title>LoanIQ — Case Decision</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
@@ -11,10 +11,18 @@
 <nav class="navbar">
     <div class="nav-logo">Loan<span>IQ</span></div>
     <div class="nav-links">
+        {% if current_user.is_admin %}
+        <a href="/admin">Admin Panel</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/history">All History</a>
+        {% else %}
         <a href="/">Apply</a>
         <a href="/history">History</a>
         <a href="/dashboard">Dashboard</a>
         <a href="/calculator">EMI Calc</a>
+        <a href="/compare">Compare</a>
+        {% endif %}
+        <a href="/logout">Logout</a>
         <button class="theme-btn" id="themeToggle">☀️</button>
     </div>
 </nav>
@@ -22,80 +30,56 @@
 <div class="container">
     <div class="card result-card">
 
-        <!-- Decision Badge & Score -->
-        {% if result == "Approved" %}
-            <div class="result-badge badge-approved">✓ Approved</div>
-            <div class="result-amount approved">{{ probability }}%</div>
-        {% else %}
-            <div class="result-badge badge-rejected">✕ Rejected</div>
-            <div class="result-amount rejected">{{ probability }}%</div>
-        {% endif %}
-        <div class="result-label">Approval confidence score</div>
-
-        <!-- Risk Score -->
-        <div class="confidence-wrap" style="margin-top:20px;">
-            <div class="confidence-title">Risk Score</div>
-            <div class="risk-score-row">
-                <span class="risk-label">High Risk</span>
-                <div class="confidence-bar-wrap" style="flex:1;">
-                    <div class="confidence-bar" style="width:{{ risk_score }}%"></div>
-                </div>
-                <span class="risk-label">Low Risk</span>
-            </div>
-            <div class="confidence-pct">{{ risk_score }} <span style="font-size:14px;color:var(--muted)">/ 100</span></div>
+        <div class="case-header">
+            <div class="case-ref">Case file — decision recorded</div>
+            <div class="case-title">Underwriting decision</div>
         </div>
 
-        <!-- Max Loan Suggestion -->
-        <div class="confidence-wrap" style="margin-top:14px; text-align:left;">
-            <div class="confidence-title">Suggested Maximum Loan</div>
-            <div style="font-family:'DM Mono',monospace; font-size:28px; font-weight:500; color:var(--gold); margin-top:6px;">
-                {{ max_loan }}k
-            </div>
-            <div style="font-size:12px; color:var(--muted); margin-top:4px;">
-                Based on your income, loan term, and credit history (40% EMI rule)
+        <div class="stamp-zone">
+            <div class="stamp {% if result == 'Approved' %}approved{% else %}rejected{% endif %}">
+                <span class="stamp-word">{{ result }}</span>
+                <span class="stamp-sub">{{ probability }}% confidence</span>
             </div>
         </div>
 
-        <!-- Confidence Bar -->
-        <div class="confidence-wrap" style="margin-top:14px;">
-            <div class="confidence-title">Model Confidence</div>
-            <div class="confidence-bar-wrap">
-                <div class="confidence-bar" style="width:{{ probability }}%"></div>
+        <div class="seal-row">
+            <div class="seal-box">
+                <div class="seal-label">Risk score</div>
+                <div class="seal-value">{{ risk_score }}<span style="font-size:13px;opacity:0.6;">/100</span></div>
             </div>
-            <div class="confidence-pct">{{ probability }}%</div>
+            <div class="seal-box">
+                <div class="seal-label">Max loan</div>
+                <div class="seal-value">{{ max_loan }}k</div>
+            </div>
         </div>
 
-        <!-- SHAP Factors -->
-        <div class="shap-section">
-            <div class="shap-title">Decision Factors</div>
-            <div class="shap-subtitle">Top features that influenced this result</div>
+        <div class="ledger">
+            <div class="ledger-head">
+                <span>Decision factor</span>
+                <span>Weight</span>
+            </div>
             {% for f in top_factors %}
-            <div class="shap-row">
-                <span class="shap-name">{{ f.feature }}</span>
-                <div class="shap-bar-wrap">
-                    <div class="shap-bar {% if f.value > 0 %}shap-pos{% else %}shap-neg{% endif %}"
-                         style="width:{{ f.width }}%"></div>
-                </div>
-                <span class="shap-val">{{ f.value }}</span>
+            <div class="ledger-row">
+                <span class="ledger-item">{{ f.feature }}</span>
+                <span class="ledger-mark {% if f.value > 0 %}credit{% else %}debit{% endif %}">
+                    <span class="ledger-sign">{% if f.value > 0 %}+{% else %}−{% endif %}</span>{{ f.abs_value }}
+                </span>
             </div>
             {% endfor %}
         </div>
 
-        <!-- Result Note -->
         <div class="result-note">
             {% if result == "Approved" %}
-            Your application profile meets the lending criteria. A bank representative may contact you for document verification before final approval.
+            This profile meets the lending criteria on file. A representative may request documents to finalize the decision.
             {% else %}
-            Your current profile did not meet the lending criteria. Key areas to improve: credit history, total income, or applying with a co-applicant may increase your chances. Your suggested max loan based on current income is <strong>{{ max_loan }}k</strong>.
+            This profile did not meet the lending criteria. Credit history, total income, or a co-applicant could move the outcome. Suggested ceiling based on current income: <strong>{{ max_loan }}k</strong>.
             {% endif %}
         </div>
 
-        <!-- Actions -->
         <div class="result-actions">
-            <a href="/" class="btn btn-primary">Apply Again</a>
-            <a href="/download-report" class="btn btn-ghost">⬇ PDF Report</a>
+            <a href="/" class="btn btn-primary">New application</a>
+            <a href="/download-report" class="btn btn-ghost">⬇ PDF report</a>
             <a href="/history" class="btn btn-ghost">History</a>
-            <a href="/dashboard" class="btn btn-ghost">Dashboard</a>
         </div>
 
     </div>
