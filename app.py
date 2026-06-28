@@ -16,7 +16,11 @@ from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
-from auth import User, init_user_db, create_user, get_user_by_email, get_user_by_id, verify_password
+from auth import (
+    User, init_user_db, create_user, get_user_by_email, get_user_by_id,
+    verify_password, get_all_users, toggle_block_user, delete_user, is_user_blocked
+)
+from functools import wraps
 
 app = Flask(__name__)
 app.secret_key = "loaniq-secret-key-2024"
@@ -31,6 +35,16 @@ login_manager.login_message     = None
 @login_manager.user_loader
 def load_user(user_id):
     return get_user_by_id(int(user_id))
+
+
+def admin_required(f):
+    """Restrict a route to logged-in admins only."""
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if not current_user.is_authenticated or not getattr(current_user, 'is_admin', False):
+            return redirect(url_for("home"))
+        return f(*args, **kwargs)
+    return wrapper
 
 # ─────────────────────────────────────────
 # Flask-Mail setup (configure your SMTP)
@@ -93,7 +107,7 @@ def get_shap_factors(X_input):
         sv_raw = np.array(shap_values).flatten()
     sv_floats = [float(v) for v in sv_raw[:len(FEATURES)]]
     pairs = sorted(zip(FEATURES, sv_floats), key=lambda x: abs(x[1]), reverse=True)[:5]
-    return [{"feature": k, "value": round(v, 4), "width": min(round(abs(v) * 300, 1), 100)} for k, v in pairs]
+    return [{"feature": k, "value": round(v, 4), "abs_value": round(abs(v), 4), "width": min(round(abs(v) * 300, 1), 100)} for k, v in pairs]
 
 
 def compute_risk_score(proba_approved):
@@ -171,7 +185,9 @@ def login():
         password = request.form.get("password", "")
         row      = get_user_by_email(email)
         if row and verify_password(row[3], password):
-            user = User(row[0], row[1], row[2])
+            if row[5]:  # is_blocked
+                return render_template("login.html", error="This account has been blocked. Contact an administrator.")
+            user = User(row[0], row[1], row[2], row[4])  # includes is_admin
             login_user(user)
             return redirect(url_for("home"))
         return render_template("login.html", error="Invalid email or password.")
@@ -200,6 +216,8 @@ def welcome():
 @app.route("/", methods=["GET", "POST"])
 @login_required
 def home():
+    if getattr(current_user, 'is_admin', False):
+        return redirect(url_for("admin_panel"))
     if request.method == "POST":
         try:
             applicant_income   = float(request.form.get('ApplicantIncome', 0))
@@ -293,38 +311,73 @@ def home():
 @app.route("/history")
 @login_required
 def history():
-    """Show last 50 predictions for logged-in user. Supports ?filter=Approved/Rejected."""
+    """
+    Regular users see only their own predictions.
+    Admins see every prediction across all users, with the applicant's username shown.
+    Supports ?filter=Approved/Rejected.
+    """
     filter_result = request.args.get('filter')
+    is_admin_view = getattr(current_user, 'is_admin', False)
+
     conn = sqlite3.connect("history.db")
     c    = conn.cursor()
-    if filter_result in ("Approved", "Rejected"):
-        c.execute("SELECT * FROM predictions WHERE user_id = ? AND result = ? ORDER BY id DESC LIMIT 50",
-                   (current_user.id, filter_result))
+
+    if is_admin_view:
+        query = '''
+            SELECT p.*, u.username
+            FROM predictions p
+            LEFT JOIN users u ON u.id = p.user_id
+        '''
+        params = []
+        if filter_result in ("Approved", "Rejected"):
+            query  += " WHERE p.result = ?"
+            params.append(filter_result)
+        query += " ORDER BY p.id DESC LIMIT 100"
+        c.execute(query, params)
     else:
-        c.execute("SELECT * FROM predictions WHERE user_id = ? ORDER BY id DESC LIMIT 50", (current_user.id,))
+        if filter_result in ("Approved", "Rejected"):
+            c.execute("SELECT * FROM predictions WHERE user_id = ? AND result = ? ORDER BY id DESC LIMIT 50",
+                       (current_user.id, filter_result))
+        else:
+            c.execute("SELECT * FROM predictions WHERE user_id = ? ORDER BY id DESC LIMIT 50", (current_user.id,))
+
     rows = c.fetchall()
     conn.close()
-    return render_template("history.html", rows=rows, active_filter=filter_result)
+    return render_template("history.html", rows=rows, active_filter=filter_result, is_admin_view=is_admin_view)
 
 
 @app.route("/export-csv")
 @login_required
 def export_csv():
-    """Export current user's prediction history as CSV."""
+    """Export prediction history as CSV — all users for admin, own history for regular users."""
+    is_admin_view = getattr(current_user, 'is_admin', False)
     conn = sqlite3.connect("history.db")
     c    = conn.cursor()
-    c.execute("""
-        SELECT id, timestamp, result, probability, risk_score,
-               applicant_income, loan_amount, credit_history, max_loan
-        FROM predictions WHERE user_id = ? ORDER BY id DESC
-    """, (current_user.id,))
+
+    if is_admin_view:
+        c.execute("""
+            SELECT p.id, p.timestamp, p.result, p.probability, p.risk_score,
+                   p.applicant_income, p.loan_amount, p.credit_history, p.max_loan, u.username
+            FROM predictions p LEFT JOIN users u ON u.id = p.user_id
+            ORDER BY p.id DESC
+        """)
+        header = ["ID", "Timestamp", "Result", "Confidence (%)", "Risk Score",
+                   "Applicant Income", "Loan Amount (k)", "Credit History", "Max Loan (k)", "Applicant"]
+    else:
+        c.execute("""
+            SELECT id, timestamp, result, probability, risk_score,
+                   applicant_income, loan_amount, credit_history, max_loan
+            FROM predictions WHERE user_id = ? ORDER BY id DESC
+        """, (current_user.id,))
+        header = ["ID", "Timestamp", "Result", "Confidence (%)", "Risk Score",
+                   "Applicant Income", "Loan Amount (k)", "Credit History", "Max Loan (k)"]
+
     rows = c.fetchall()
     conn.close()
 
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["ID", "Timestamp", "Result", "Confidence (%)", "Risk Score",
-                     "Applicant Income", "Loan Amount (k)", "Credit History", "Max Loan (k)"])
+    writer.writerow(header)
     for row in rows:
         writer.writerow(row)
 
@@ -337,21 +390,38 @@ def export_csv():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    """Analytics dashboard for logged-in user."""
+    """Analytics dashboard — admins see system-wide data, regular users see only their own."""
+    is_admin_view = getattr(current_user, 'is_admin', False)
     conn = sqlite3.connect("history.db")
     c    = conn.cursor()
-    c.execute("SELECT result, COUNT(*) FROM predictions WHERE user_id = ? GROUP BY result", (current_user.id,))
-    counts = dict(c.fetchall())
-    c.execute("SELECT AVG(probability) FROM predictions WHERE user_id = ?", (current_user.id,))
-    avg_prob = round(c.fetchone()[0] or 0, 1)
-    c.execute("SELECT AVG(loan_amount) FROM predictions WHERE user_id = ?", (current_user.id,))
-    avg_loan = round(c.fetchone()[0] or 0, 1)
-    c.execute("""
-        SELECT DATE(timestamp) as day, result, COUNT(*) as cnt
-        FROM predictions WHERE user_id = ?
-        AND timestamp >= DATE('now', '-30 days')
-        GROUP BY day, result ORDER BY day ASC
-    """, (current_user.id,))
+
+    if is_admin_view:
+        c.execute("SELECT result, COUNT(*) FROM predictions GROUP BY result")
+        counts = dict(c.fetchall())
+        c.execute("SELECT AVG(probability) FROM predictions")
+        avg_prob = round(c.fetchone()[0] or 0, 1)
+        c.execute("SELECT AVG(loan_amount) FROM predictions")
+        avg_loan = round(c.fetchone()[0] or 0, 1)
+        c.execute("""
+            SELECT DATE(timestamp) as day, result, COUNT(*) as cnt
+            FROM predictions
+            WHERE timestamp >= DATE('now', '-30 days')
+            GROUP BY day, result ORDER BY day ASC
+        """)
+    else:
+        c.execute("SELECT result, COUNT(*) FROM predictions WHERE user_id = ? GROUP BY result", (current_user.id,))
+        counts = dict(c.fetchall())
+        c.execute("SELECT AVG(probability) FROM predictions WHERE user_id = ?", (current_user.id,))
+        avg_prob = round(c.fetchone()[0] or 0, 1)
+        c.execute("SELECT AVG(loan_amount) FROM predictions WHERE user_id = ?", (current_user.id,))
+        avg_loan = round(c.fetchone()[0] or 0, 1)
+        c.execute("""
+            SELECT DATE(timestamp) as day, result, COUNT(*) as cnt
+            FROM predictions WHERE user_id = ?
+            AND timestamp >= DATE('now', '-30 days')
+            GROUP BY day, result ORDER BY day ASC
+        """, (current_user.id,))
+
     trend_rows = c.fetchall()
     conn.close()
 
@@ -369,6 +439,7 @@ def dashboard():
 
     return render_template("dashboard.html",
         approved=approved, rejected=rejected,
+        is_admin_view=is_admin_view,
         avg_prob=avg_prob, avg_loan=avg_loan,
         fi_labels=json.dumps(fi_labels), fi_values=json.dumps(fi_values),
         trend_dates=json.dumps(trend_dates),
@@ -381,6 +452,8 @@ def dashboard():
 @login_required
 def compare():
     """Loan comparison tool — compare up to 3 scenarios side by side."""
+    if getattr(current_user, 'is_admin', False):
+        return redirect(url_for("admin_panel"))
     results = []
     if request.method == "POST":
         scenarios = []
@@ -428,7 +501,98 @@ def compare():
 @app.route("/calculator")
 @login_required
 def calculator():
+    if getattr(current_user, 'is_admin', False):
+        return redirect(url_for("admin_panel"))
     return render_template("calculator.html")
+
+
+# ─────────────────────────────────────────
+# Admin panel routes
+# ─────────────────────────────────────────
+@app.route("/admin")
+@login_required
+@admin_required
+def admin_panel():
+    """Full admin overview — system stats + user list."""
+    conn = sqlite3.connect("history.db")
+    c    = conn.cursor()
+
+    c.execute("SELECT COUNT(*) FROM users")
+    total_users = c.fetchone()[0]
+
+    c.execute("SELECT COUNT(*) FROM predictions")
+    total_predictions = c.fetchone()[0]
+
+    c.execute("SELECT result, COUNT(*) FROM predictions GROUP BY result")
+    counts = dict(c.fetchall())
+
+    c.execute("SELECT AVG(probability) FROM predictions")
+    avg_prob = round(c.fetchone()[0] or 0, 1)
+
+    conn.close()
+
+    users = get_all_users()
+
+    return render_template("admin.html",
+        total_users=total_users,
+        total_predictions=total_predictions,
+        approved=counts.get("Approved", 0),
+        rejected=counts.get("Rejected", 0),
+        avg_prob=avg_prob,
+        users=users
+    )
+
+
+@app.route("/admin/toggle-block/<int:user_id>", methods=["POST"])
+@login_required
+@admin_required
+def admin_toggle_block(user_id):
+    """Block or unblock a user. Admins cannot block themselves or other admins."""
+    conn = sqlite3.connect("history.db")
+    c    = conn.cursor()
+    c.execute("SELECT is_admin FROM users WHERE id = ?", (user_id,))
+    row = c.fetchone()
+    conn.close()
+
+    if row and row[0] == 1:
+        flash("Admins cannot be blocked.")
+        return redirect(url_for("admin_panel"))
+
+    toggle_block_user(user_id)
+    return redirect(url_for("admin_panel"))
+
+
+@app.route("/admin/delete/<int:user_id>", methods=["POST"])
+@login_required
+@admin_required
+def admin_delete_user(user_id):
+    """Delete a non-admin user and their prediction history."""
+    if user_id == current_user.id:
+        flash("You cannot delete your own account.")
+        return redirect(url_for("admin_panel"))
+
+    deleted = delete_user(user_id)
+    if not deleted:
+        flash("Could not delete this user — admins are protected.")
+    return redirect(url_for("admin_panel"))
+
+
+@app.route("/admin/export-users-csv")
+@login_required
+@admin_required
+def admin_export_users_csv():
+    """Export the full user list as CSV."""
+    users = get_all_users()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["ID", "Username", "Email", "Is Admin", "Is Blocked", "Created At", "Prediction Count"])
+    for u in users:
+        writer.writerow(u)
+
+    response = make_response(output.getvalue())
+    response.headers["Content-Disposition"] = "attachment; filename=LoanIQ_Users.csv"
+    response.headers["Content-Type"]        = "text/csv"
+    return response
 
 
 @app.route("/download-report")
