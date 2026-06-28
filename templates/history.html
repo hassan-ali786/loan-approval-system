@@ -11,11 +11,17 @@
 <nav class="navbar">
     <div class="nav-logo">Loan<span>IQ</span></div>
     <div class="nav-links">
+        {% if current_user.is_admin %}
+        <a href="/admin">Admin Panel</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/history">All History</a>
+        {% else %}
         <a href="/">Apply</a>
         <a href="/history">History</a>
         <a href="/dashboard">Dashboard</a>
         <a href="/calculator">EMI Calc</a>
         <a href="/compare">Compare</a>
+        {% endif %}
         <a href="/logout">Logout</a>
         <button class="theme-btn" id="themeToggle">☀️</button>
     </div>
@@ -25,13 +31,14 @@
     <div class="card">
         <div class="card-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
             <div>
-                <h1>Prediction History</h1>
+                <h1>{% if is_admin_view %}All Applications{% else %}Prediction History{% endif %}</h1>
                 <p>
-                    {% if active_filter %}Showing {{ active_filter }} only · <a href="/history" style="color:var(--gold);">Clear filter</a>{% else %}Last 50 applications processed{% endif %}
+                    {% if active_filter %}Showing {{ active_filter }} only · <a href="/history" style="color:var(--gold);">Clear filter</a>
+                    {% elif is_admin_view %}Last 100 applications across all users
+                    {% else %}Last 50 applications processed{% endif %}
                 </p>
                 <div class="gold-line"></div>
             </div>
-            <!-- CSV Export Button -->
             <a href="/export-csv" class="btn btn-primary" style="margin-top:6px;">⬇ Export CSV</a>
         </div>
 
@@ -41,6 +48,7 @@
                 <thead>
                     <tr>
                         <th>#</th>
+                        {% if is_admin_view %}<th>Applicant</th>{% endif %}
                         <th>Time</th>
                         <th>Decision</th>
                         <th>Confidence</th>
@@ -54,18 +62,21 @@
                 <tbody>
                 {% for row in rows %}
                 <tr>
-                    <td style="color:var(--muted); font-family:'DM Mono',monospace;">{{ row[0] }}</td>
+                    <td style="color:var(--muted); font-family:'IBM Plex Mono',monospace;">{{ row[0] }}</td>
+                    {% if is_admin_view %}
+                    <td style="font-weight:600;">{{ row[10] or "—" }}</td>
+                    {% endif %}
                     <td style="color:var(--muted); font-size:12px;">{{ row[1] }}</td>
                     <td>
                         <span class="pill {% if row[2] == 'Approved' %}pill-approved{% else %}pill-rejected{% endif %}">
                             {% if row[2] == 'Approved' %}✓{% else %}✕{% endif %} {{ row[2] }}
                         </span>
                     </td>
-                    <td style="font-family:'DM Mono',monospace; color:var(--gold);">{{ row[3] }}%</td>
-                    <td style="font-family:'DM Mono',monospace;">{{ row[4] }} / 100</td>
-                    <td style="font-family:'DM Mono',monospace;">{{ row[5] }}</td>
-                    <td style="font-family:'DM Mono',monospace;">{{ row[6] }}k</td>
-                    <td style="font-family:'DM Mono',monospace; color:var(--gold);">{{ row[9] }}k</td>
+                    <td style="font-family:'IBM Plex Mono',monospace; color:var(--brass-light);">{{ row[3] }}%</td>
+                    <td style="font-family:'IBM Plex Mono',monospace;">{{ row[4] }} / 100</td>
+                    <td style="font-family:'IBM Plex Mono',monospace;">{{ row[5] }}</td>
+                    <td style="font-family:'IBM Plex Mono',monospace;">{{ row[6] }}k</td>
+                    <td style="font-family:'IBM Plex Mono',monospace; color:var(--brass-light);">{{ row[9] }}k</td>
                     <td>
                         <span class="pill {% if row[7] == 1 %}pill-approved{% else %}pill-rejected{% endif %}">
                             {% if row[7] == 1 %}Good{% else %}Poor{% endif %}
@@ -79,12 +90,18 @@
         {% else %}
         <div class="empty-state">
             <p>No predictions yet.</p>
+            {% if not is_admin_view %}
             <a href="/" class="btn btn-primary">Make First Application</a>
+            {% endif %}
         </div>
         {% endif %}
 
         <div class="result-actions" style="margin-top:24px;">
+            {% if is_admin_view %}
+            <a href="/admin" class="btn btn-primary">Admin Panel</a>
+            {% else %}
             <a href="/" class="btn btn-primary">New Application</a>
+            {% endif %}
             <a href="/export-csv" class="btn btn-ghost">⬇ Export CSV</a>
             <a href="/dashboard" class="btn btn-ghost">Dashboard</a>
         </div>
