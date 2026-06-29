@@ -23,6 +23,7 @@
         <a href="/calculator">EMI Calc</a>
         <a href="/compare">Compare</a>
         {% endif %}
+        <a href="/change-password">Password</a>
         <a href="/logout">Logout</a>
         <button class="theme-btn" id="themeToggle">☀️</button>
     </div>
@@ -30,48 +31,63 @@
 
 <div class="container-wide">
     <div class="card">
-        <div class="card-header">
-            <h1>Dashboard</h1>
-            <p>Overview of all processed applications</p>
-            <div class="gold-line"></div>
+
+        <div class="case-header">
+            <div class="case-ref">
+                {% if current_user.is_admin %}System-wide records{% else %}Your application records{% endif %}
+            </div>
+            <div class="case-title">Ledger overview</div>
         </div>
 
-        <div class="stats-grid">
-            <div class="stat-box clickable" id="statApproved">
-                <div class="stat-box-label">Approved</div>
-                <div class="stat-box-num green">{{ approved }}</div>
+        <!-- Stats as seal boxes -->
+        <div class="seal-row admin-seal-row">
+            <div class="seal-box seal-credit clickable" id="statApproved">
+                <div class="seal-label">Approved</div>
+                <div class="seal-value">{{ approved }}</div>
             </div>
-            <div class="stat-box clickable" id="statRejected">
-                <div class="stat-box-label">Rejected</div>
-                <div class="stat-box-num red">{{ rejected }}</div>
+            <div class="seal-box seal-debit clickable" id="statRejected">
+                <div class="seal-label">Rejected</div>
+                <div class="seal-value">{{ rejected }}</div>
             </div>
-            <div class="stat-box">
-                <div class="stat-box-label">Avg Confidence</div>
-                <div class="stat-box-num gold">{{ avg_prob }}%</div>
+            <div class="seal-box">
+                <div class="seal-label">Avg confidence</div>
+                <div class="seal-value">{{ avg_prob }}%</div>
             </div>
-            <div class="stat-box">
-                <div class="stat-box-label">Avg Loan Amount</div>
-                <div class="stat-box-num">{{ avg_loan }}k</div>
+            <div class="seal-box">
+                <div class="seal-label">Avg loan</div>
+                <div class="seal-value">{{ avg_loan }}k</div>
             </div>
         </div>
 
-        <div class="section-label">Approval Breakdown — click a slice to filter history</div>
-        <div class="chart-wrap">
+        <div class="ledger-section-head">
+            <span>Approval breakdown</span>
+            <span style="color:var(--ink-faint); text-transform:none; letter-spacing:normal; font-size:11px;">click a slice to filter</span>
+        </div>
+        <div class="chart-wrap ledger-chart-wrap">
             <canvas id="pieChart" width="260" height="260"></canvas>
         </div>
 
-        <div class="section-label" style="margin-top:24px;">Monthly Trend (Last 30 Days)</div>
-        <div class="chart-wrap" style="padding:24px 16px;">
+        <div class="ledger-section-head" style="margin-top:24px;">
+            <span>30-day trend</span>
+        </div>
+        <div class="chart-wrap ledger-chart-wrap" style="padding:24px 16px;">
             <canvas id="trendChart"></canvas>
         </div>
 
-        <div class="section-label" style="margin-top:24px;">Feature Importance — hover for exact %</div>
-        <div class="chart-wrap" style="padding:24px 16px;">
+        <div class="ledger-section-head" style="margin-top:24px;">
+            <span>Feature weight</span>
+            <span style="color:var(--ink-faint); text-transform:none; letter-spacing:normal; font-size:11px;">hover for exact %</span>
+        </div>
+        <div class="chart-wrap ledger-chart-wrap" style="padding:24px 16px;">
             <canvas id="fiChart"></canvas>
         </div>
 
         <div class="result-actions" style="margin-top:24px;">
+            {% if current_user.is_admin %}
+            <a href="/admin" class="btn btn-primary">Admin Panel</a>
+            {% else %}
             <a href="/" class="btn btn-primary">New Application</a>
+            {% endif %}
             <a href="/history" class="btn btn-ghost">View History</a>
             <a href="/export-csv" class="btn btn-ghost">⬇ Export CSV</a>
         </div>
@@ -80,36 +96,39 @@
 
 <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 <script>
-// Shared tooltip styling for a cohesive, branded look
 // Read live theme colors so charts adapt to dark/light mode
 const isLight   = document.documentElement.getAttribute('data-theme') === 'light';
-const textColor = isLight ? '#5A6A7A' : '#8A9BB0';
-const tickColor = isLight ? '#0D1B2A' : '#F5F8FF';
-const gridColor = isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.04)';
+const textColor = isLight ? '#6B6458' : '#8A8576';
+const tickColor = isLight ? '#0B0E14' : '#F4F1E8';
+const gridColor = isLight ? 'rgba(11,14,20,0.06)' : 'rgba(244,241,232,0.04)';
+const brass     = '#B8902F';
+const brassLite = '#D4AF52';
+const ledgerGrn = '#4ADE94';
+const stampRed  = '#E8746B';
 
 const tooltipBase = {
-    backgroundColor: '#0D1B2A',
-    titleColor: '#C9A84C',
-    bodyColor: '#F5F8FF',
-    borderColor: 'rgba(201,168,76,0.3)',
+    backgroundColor: '#0B0E14',
+    titleColor: brass,
+    bodyColor: '#F4F1E8',
+    borderColor: 'rgba(184,144,47,0.3)',
     borderWidth: 1,
     padding: 12,
-    titleFont: { family: 'DM Mono', size: 12, weight: '600' },
+    titleFont: { family: 'IBM Plex Mono', size: 11, weight: '600' },
     bodyFont:  { family: 'DM Sans', size: 12 },
-    cornerRadius: 8,
+    cornerRadius: 4,
     displayColors: true
 };
 
 // ── Approval doughnut — click-to-filter ────────
-const pieChart = new Chart(document.getElementById('pieChart').getContext('2d'), {
+new Chart(document.getElementById('pieChart').getContext('2d'), {
     type: 'doughnut',
     data: {
         labels: ['Approved', 'Rejected'],
         datasets: [{
             data: [{{ approved }}, {{ rejected }}],
-            backgroundColor: ['rgba(46,204,113,0.85)', 'rgba(231,76,60,0.85)'],
-            hoverBackgroundColor: ['rgba(46,204,113,1)', 'rgba(231,76,60,1)'],
-            borderColor: ['#152233', '#152233'],
+            backgroundColor: [ledgerGrn + 'CC', stampRed + 'CC'],
+            hoverBackgroundColor: [ledgerGrn, stampRed],
+            borderColor: ['#0B0E14', '#0B0E14'],
             borderWidth: 3,
             hoverOffset: 8
         }]
@@ -132,9 +151,7 @@ const pieChart = new Chart(document.getElementById('pieChart').getContext('2d'),
             },
             tooltip: {
                 ...tooltipBase,
-                callbacks: {
-                    label: (ctx) => `${ctx.label}: ${ctx.parsed} applications`
-                }
+                callbacks: { label: (ctx) => `${ctx.label}: ${ctx.parsed} applications` }
             }
         }
     }
@@ -153,13 +170,13 @@ new Chart(document.getElementById('trendChart').getContext('2d'), {
             {
                 label: 'Approved',
                 data: trendApproved,
-                borderColor: 'rgba(46,204,113,1)',
-                backgroundColor: 'rgba(46,204,113,0.08)',
+                borderColor: ledgerGrn,
+                backgroundColor: 'rgba(74,222,148,0.07)',
                 borderWidth: 2,
                 pointRadius: 4,
                 pointHoverRadius: 7,
-                pointBackgroundColor: 'rgba(46,204,113,1)',
-                pointBorderColor: '#152233',
+                pointBackgroundColor: ledgerGrn,
+                pointBorderColor: '#0B0E14',
                 pointBorderWidth: 2,
                 fill: true,
                 tension: 0.4
@@ -167,13 +184,13 @@ new Chart(document.getElementById('trendChart').getContext('2d'), {
             {
                 label: 'Rejected',
                 data: trendRejected,
-                borderColor: 'rgba(231,76,60,1)',
-                backgroundColor: 'rgba(231,76,60,0.08)',
+                borderColor: stampRed,
+                backgroundColor: 'rgba(231,116,107,0.07)',
                 borderWidth: 2,
                 pointRadius: 4,
                 pointHoverRadius: 7,
-                pointBackgroundColor: 'rgba(231,76,60,1)',
-                pointBorderColor: '#152233',
+                pointBackgroundColor: stampRed,
+                pointBorderColor: '#0B0E14',
                 pointBorderWidth: 2,
                 fill: true,
                 tension: 0.4
@@ -187,12 +204,7 @@ new Chart(document.getElementById('trendChart').getContext('2d'), {
                 position: 'bottom',
                 labels: { color: textColor, font: { family: 'DM Sans', size: 13 }, padding: 20 }
             },
-            tooltip: {
-                ...tooltipBase,
-                callbacks: {
-                    title: (items) => `Date: ${items[0].label}`
-                }
-            }
+            tooltip: { ...tooltipBase, callbacks: { title: (items) => `Date: ${items[0].label}` } }
         },
         scales: {
             x: { ticks: { color: textColor, font: { size: 11 } }, grid: { color: gridColor } },
@@ -201,7 +213,7 @@ new Chart(document.getElementById('trendChart').getContext('2d'), {
     }
 });
 
-// ── Feature importance horizontal bar — hover highlight ──
+// ── Feature importance horizontal bar ──────────
 const fiLabels = {{ fi_labels | safe }};
 const fiValues = {{ fi_values | safe }};
 
@@ -212,11 +224,11 @@ new Chart(document.getElementById('fiChart').getContext('2d'), {
         datasets: [{
             label: 'Importance (%)',
             data: fiValues,
-            backgroundColor: 'rgba(201,168,76,0.7)',
-            hoverBackgroundColor: 'rgba(232,199,106,0.95)',
-            borderColor:     'rgba(201,168,76,1)',
+            backgroundColor: brass + 'B3',
+            hoverBackgroundColor: brassLite,
+            borderColor: brass,
             borderWidth: 1,
-            borderRadius: 6
+            borderRadius: 3
         }]
     },
     options: {
@@ -226,21 +238,16 @@ new Chart(document.getElementById('fiChart').getContext('2d'), {
         },
         plugins: {
             legend: { display: false },
-            tooltip: {
-                ...tooltipBase,
-                callbacks: {
-                    label: (ctx) => `Importance: ${ctx.parsed.x}%`
-                }
-            }
+            tooltip: { ...tooltipBase, callbacks: { label: (ctx) => `Importance: ${ctx.parsed.x}%` } }
         },
         scales: {
             x: { ticks: { color: textColor }, grid: { color: gridColor } },
-            y: { ticks: { color: tickColor, font: { family: 'DM Mono', size: 11 } }, grid: { display: false } }
+            y: { ticks: { color: tickColor, font: { family: 'IBM Plex Mono', size: 11 } }, grid: { display: false } }
         }
     }
 });
 
-// ── Stat box click-to-filter (mirrors doughnut behavior) ──
+// ── Stat box click-to-filter ────────────────────
 document.getElementById('statApproved').addEventListener('click', () => {
     window.location.href = '/history?filter=Approved';
 });

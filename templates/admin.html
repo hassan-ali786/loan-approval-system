@@ -14,6 +14,7 @@
         <a href="/admin">Admin Panel</a>
         <a href="/dashboard">Dashboard</a>
         <a href="/history">All History</a>
+        <a href="/change-password">Password</a>
         <a href="/logout">Logout</a>
         <button class="theme-btn" id="themeToggle">☀️</button>
     </div>
@@ -24,7 +25,7 @@
 
         <div class="case-header">
             <div class="case-ref">Restricted access — administrator only</div>
-            <div class="case-title">System overview</div>
+            <div class="case-title">System ledger</div>
         </div>
 
         {% with messages = get_flashed_messages() %}
@@ -35,85 +36,87 @@
             {% endif %}
         {% endwith %}
 
-        <!-- System-wide stats -->
-        <div class="stats-grid">
-            <div class="stat-box">
-                <div class="stat-box-label">Total Users</div>
-                <div class="stat-box-num gold">{{ total_users }}</div>
+        <!-- System-wide stats as seal boxes -->
+        <div class="seal-row admin-seal-row">
+            <div class="seal-box">
+                <div class="seal-label">Total users</div>
+                <div class="seal-value">{{ total_users }}</div>
             </div>
-            <div class="stat-box">
-                <div class="stat-box-label">Total Applications</div>
-                <div class="stat-box-num">{{ total_predictions }}</div>
+            <div class="seal-box">
+                <div class="seal-label">Applications</div>
+                <div class="seal-value">{{ total_predictions }}</div>
             </div>
-            <div class="stat-box">
-                <div class="stat-box-label">Approved</div>
-                <div class="stat-box-num green">{{ approved }}</div>
+            <div class="seal-box seal-credit">
+                <div class="seal-label">Approved</div>
+                <div class="seal-value">{{ approved }}</div>
             </div>
-            <div class="stat-box">
-                <div class="stat-box-label">Rejected</div>
-                <div class="stat-box-num red">{{ rejected }}</div>
+            <div class="seal-box seal-debit">
+                <div class="seal-label">Rejected</div>
+                <div class="seal-value">{{ rejected }}</div>
+            </div>
+            <div class="seal-box">
+                <div class="seal-label">Avg confidence</div>
+                <div class="seal-value">{{ avg_prob }}%</div>
             </div>
         </div>
 
-        <!-- User management -->
-        <div class="section-label" style="margin-top:28px; display:flex; justify-content:space-between; align-items:center;">
-            <span>Registered Users</span>
-            <a href="/admin/export-users-csv" class="btn btn-ghost" style="padding:6px 14px; font-size:12px;">⬇ Export Users CSV</a>
+        <!-- User registry as a ledger -->
+        <div class="ledger-section-head">
+            <span>User registry</span>
+            <a href="/admin/export-users-csv" class="ledger-export-link">⬇ Export ledger (CSV)</a>
         </div>
 
-        <div class="table-wrap">
-            <table class="history-table">
+        <div class="table-wrap admin-table-wrap">
+            <table class="history-table admin-ledger-table">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Username</th>
-                        <th>Email</th>
+                        <th>Ref</th>
+                        <th>Name</th>
+                        <th>Email on file</th>
                         <th>Role</th>
                         <th>Status</th>
-                        <th>Applications</th>
-                        <th>Joined</th>
-                        <th>Actions</th>
+                        <th>Filings</th>
+                        <th>Registered</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
                 {% for u in users %}
-                <tr>
-                    <td style="font-family:'IBM Plex Mono',monospace; color:var(--muted);">{{ u[0] }}</td>
-                    <td>{{ u[1] }}</td>
-                    <td style="color:var(--muted); font-size:12px;">{{ u[2] }}</td>
+                <tr class="{% if u[4] %}row-blocked{% endif %}">
+                    <td class="mono-cell muted-cell">#{{ "%03d"|format(u[0]) }}</td>
+                    <td class="strong-cell">{{ u[1] }}</td>
+                    <td class="muted-cell small-cell">{{ u[2] }}</td>
                     <td>
                         {% if u[3] %}
-                        <span class="pill pill-approved">★ Admin</span>
+                        <span class="role-tag role-admin">★ Admin</span>
                         {% else %}
-                        <span class="pill" style="background:rgba(138,155,176,0.12); color:var(--muted);">User</span>
+                        <span class="role-tag role-user">Applicant</span>
                         {% endif %}
                     </td>
                     <td>
                         {% if u[4] %}
-                        <span class="pill pill-rejected">Blocked</span>
+                        <span class="status-dot status-blocked"></span><span class="small-cell">Blocked</span>
                         {% else %}
-                        <span class="pill pill-approved">Active</span>
+                        <span class="status-dot status-active"></span><span class="small-cell">Active</span>
                         {% endif %}
                     </td>
-                    <td style="font-family:'IBM Plex Mono',monospace;">{{ u[6] }}</td>
-                    <td style="color:var(--muted); font-size:12px;">{{ u[5] }}</td>
+                    <td class="mono-cell">{{ u[6] }}</td>
+                    <td class="muted-cell small-cell">{{ u[5] }}</td>
                     <td>
                         {% if not u[3] %}
-                        <div style="display:flex; gap:6px;">
-                            <form method="POST" action="/admin/toggle-block/{{ u[0] }}" style="margin:0;">
-                                <button type="submit" class="btn btn-ghost" style="padding:5px 10px; font-size:11px;">
+                        <div class="admin-action-row">
+                            <form method="POST" action="/admin/toggle-block/{{ u[0] }}" class="inline-form">
+                                <button type="submit" class="ledger-btn">
                                     {% if u[4] %}Unblock{% else %}Block{% endif %}
                                 </button>
                             </form>
-                            <form method="POST" action="/admin/delete/{{ u[0] }}" style="margin:0;"
+                            <form method="POST" action="/admin/delete/{{ u[0] }}" class="inline-form"
                                   onsubmit="return confirm('Delete this user and all their predictions? This cannot be undone.');">
-                                <button type="submit" class="btn btn-ghost" style="padding:5px 10px; font-size:11px; color:var(--stamp-text);">
-                                    Delete
-                                </button>
+                                <button type="submit" class="ledger-btn ledger-btn-danger">Delete</button>
                             </form>
                         </div>
                         {% else %}
-                        <span style="color:var(--muted); font-size:11px;">Protected</span>
+                        <span class="muted-cell small-cell">Protected</span>
                         {% endif %}
                     </td>
                 </tr>
