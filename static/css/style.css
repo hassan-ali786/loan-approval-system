@@ -899,3 +899,322 @@ body {
 .stat-box.clickable:hover {
     border-color: var(--gold);
 }
+
+/* ============================================
+   VIP REDESIGN — Decision Stamp System
+   Subject: lending case file / underwriting ledger
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root {
+    --ink:        #0B0E14;
+    --paper:      #14181F;
+    --paper-line: #1C2129;
+    --brass:      #B8902F;
+    --brass-light:#D4AF52;
+    --ledger:     #1F4D3D;
+    --ledger-text:#4ADE94;
+    --stamp-red:  #7A2E2E;
+    --stamp-text: #E8746B;
+    --ink-muted:  #8A8576;
+    --ink-faint:  #5C584B;
+    --paper-border: rgba(184,144,47,0.18);
+}
+
+:root[data-theme="light"] {
+    --ink:        #F4F1E8;
+    --paper:      #FFFFFF;
+    --paper-line: #ECE8DB;
+    --ink-muted:  #6B6458;
+    --ink-faint:  #9B9586;
+    --paper-border: rgba(184,144,47,0.25);
+}
+
+/* ========================
+   CASE FILE HEADER
+   ======================== */
+.case-header {
+    border-bottom: 2px solid var(--brass);
+    padding-bottom: 18px;
+    margin-bottom: 28px;
+    position: relative;
+}
+.case-ref {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+.case-title {
+    font-family: 'Fraunces', serif;
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--white);
+    margin-top: 4px;
+}
+
+/* ========================
+   THE DECISION STAMP
+   Signature element — rubber-stamp mark that
+   thuds onto the case file like a real underwriting stamp
+   ======================== */
+.stamp-zone {
+    display: flex;
+    justify-content: center;
+    padding: 28px 0 8px;
+}
+.stamp {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 168px;
+    height: 168px;
+    border-radius: 50%;
+    border: 3px double currentColor;
+    transform: rotate(-7deg) scale(1);
+    position: relative;
+    animation: stampThud 0.55s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+.stamp::before {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    opacity: 0.5;
+}
+.stamp.approved { color: var(--ledger-text); }
+.stamp.rejected { color: var(--stamp-text); }
+
+.stamp-word {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+.stamp-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.75;
+    margin-top: 4px;
+}
+
+@keyframes stampThud {
+    0%   { transform: rotate(-7deg) scale(2.4); opacity: 0; }
+    55%  { transform: rotate(-9deg) scale(0.92); opacity: 1; }
+    75%  { transform: rotate(-6deg) scale(1.04); }
+    100% { transform: rotate(-7deg) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .stamp { animation: none; }
+}
+
+/* ========================
+   LEDGER ROW — itemized factor entries
+   Replaces generic "bar chart" SHAP display
+   ======================== */
+.ledger {
+    border-top: 1px solid var(--paper-border);
+    border-bottom: 1px solid var(--paper-border);
+    margin: 24px 0;
+}
+.ledger-head {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 4px 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    border-bottom: 1px dashed var(--paper-border);
+}
+.ledger-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 4px;
+    border-bottom: 1px dashed var(--paper-border);
+    font-family: 'IBM Plex Mono', monospace;
+}
+.ledger-row:last-child { border-bottom: none; }
+.ledger-item {
+    font-size: 13px;
+    color: var(--white);
+    flex: 1;
+}
+.ledger-mark {
+    font-size: 13px;
+    font-weight: 600;
+    width: 70px;
+    text-align: right;
+}
+.ledger-mark.credit { color: var(--ledger-text); }
+.ledger-mark.debit  { color: var(--stamp-text); }
+.ledger-sign { opacity: 0.7; font-weight: 400; margin-right: 2px; }
+
+/* ========================
+   WAX-SEAL CONFIDENCE BADGE
+   ======================== */
+.seal-row {
+    display: flex;
+    gap: 14px;
+    margin: 24px 0;
+}
+.seal-box {
+    flex: 1;
+    border: 1px solid var(--paper-border);
+    padding: 14px 16px;
+    text-align: center;
+}
+.seal-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 6px;
+}
+.seal-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--brass-light);
+}
+
+/* ============================================
+   ADMIN PANEL — SYSTEM LEDGER
+   Extends the case-file/ledger identity used on result.html
+   ============================================ */
+
+.admin-seal-row {
+    flex-wrap: wrap;
+    margin: 24px 0 8px;
+}
+.admin-seal-row .seal-box {
+    min-width: 130px;
+}
+.seal-credit .seal-value { color: var(--ledger-text); }
+.seal-debit  .seal-value { color: var(--stamp-text); }
+
+.ledger-section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 28px 0 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-bottom: 1px dashed var(--paper-border);
+    padding-bottom: 10px;
+}
+.ledger-export-link {
+    color: var(--brass-light);
+    text-decoration: none;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: none;
+}
+.ledger-export-link:hover { text-decoration: underline; }
+
+.admin-table-wrap {
+    border: 1px solid var(--paper-border);
+    border-radius: 4px;
+}
+.admin-ledger-table th {
+    background: var(--paper-line);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.07em;
+}
+.admin-ledger-table td { font-family: 'DM Sans', sans-serif; }
+
+.mono-cell {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+}
+.muted-cell { color: var(--ink-muted); }
+.small-cell { font-size: 12px; }
+.strong-cell { font-weight: 600; color: var(--white); }
+
+.row-blocked { opacity: 0.55; }
+
+.role-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 3px;
+}
+.role-admin { background: rgba(184,144,47,0.12); color: var(--brass-light); border: 1px solid rgba(184,144,47,0.3); }
+.role-user  { background: rgba(138,155,176,0.1); color: var(--ink-muted); border: 1px solid var(--paper-border); }
+
+.status-dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+.status-active  { background: var(--ledger-text); box-shadow: 0 0 6px rgba(74,222,148,0.5); }
+.status-blocked { background: var(--stamp-text); box-shadow: 0 0 6px rgba(231,116,107,0.5); }
+
+.admin-action-row { display: flex; gap: 6px; }
+.inline-form { margin: 0; }
+.ledger-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: transparent;
+    border: 1px solid var(--paper-border);
+    color: var(--ink-muted);
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease;
+}
+.ledger-btn:hover {
+    border-color: var(--brass);
+    color: var(--brass-light);
+}
+.ledger-btn-danger:hover {
+    border-color: var(--stamp-red);
+    color: var(--stamp-text);
+}
+
+@media (max-width: 700px) {
+    .admin-seal-row { flex-direction: column; }
+    .admin-action-row { flex-direction: column; }
+}
+
+/* ========================
+   DASHBOARD LEDGER CHARTS
+   ======================== */
+.ledger-chart-wrap {
+    background: var(--paper);
+    border: 1px solid var(--paper-border);
+    border-radius: 4px;
+    padding: 20px;
+}
+.seal-box.clickable {
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+}
+.seal-box.clickable:hover {
+    border-color: var(--brass);
+}
