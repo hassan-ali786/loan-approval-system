@@ -23,10 +23,11 @@ https://github.com/user-attachments/assets/e33417bf-384f-41e9-a908-f6ab358bc934
 - First registered account is automatically promoted to **Admin**
 - Role-based navigation — admins and regular users see different menus and pages
 - Admins are redirected away from Apply / Compare / EMI Calculator (those are applicant-only tools)
+- Change password (any logged-in user) and forgot-password email reset flow
 
 **Admin Panel** (`/admin`)
-- System-wide stats — total users, total applications, approved/rejected counts
-- Full user table — role, status, application count, join date
+- System-wide stats — total users, total applications, approved/rejected counts, avg confidence
+- Full user registry — role, status, application count, join date
 - Block / Unblock any non-admin user
 - Delete a user and their entire prediction history (admins are protected from deletion)
 - Export full user list as CSV
@@ -48,12 +49,13 @@ https://github.com/user-attachments/assets/e33417bf-384f-41e9-a908-f6ab358bc934
 - 30-day monthly trend line chart
 - Feature importance bar chart
 
-**UI/UX**
+**Design**
+- A distinctive "case file" visual identity throughout — decisions are presented
+  as an underwriting stamp, SHAP factors as ledger entries, and the admin panel
+  as a "system ledger" with role tags and status indicators
+- `Fraunces` (display) + `IBM Plex Mono` (data/ledger) typography
 - Dark / Light theme toggle (persists via localStorage)
-- Distinctive "case file" visual identity — decision results presented as an
-  underwriting stamp with itemized SHAP ledger entries
-- Loading animation on submission
-- Page-load transitions and micro-interactions
+- Loading animation on submission, page-load transitions, micro-interactions
 - Fully responsive (mobile, tablet, desktop)
 
 ---
@@ -84,28 +86,31 @@ Loan-Approval-System/
 │   └── features.pkl
 │
 ├── templates/
-│   ├── landing.html        ← public welcome page
+│   ├── landing.html          ← public welcome page
 │   ├── login.html
 │   ├── signup.html
-│   ├── index.html          ← applicant-only: loan application form
-│   ├── result.html         ← decision stamp + SHAP ledger
-│   ├── history.html        ← own history (user) / all history (admin)
-│   ├── dashboard.html      ← own stats (user) / system-wide stats (admin)
-│   ├── calculator.html     ← applicant-only: EMI calculator
-│   ├── compare.html        ← applicant-only: scenario comparison
-│   └── admin.html          ← admin-only: user management panel
+│   ├── forgot_password.html
+│   ├── reset_password.html
+│   ├── change_password.html
+│   ├── index.html            ← applicant-only: loan application form
+│   ├── result.html           ← decision stamp + SHAP ledger
+│   ├── history.html          ← own history (user) / all history (admin)
+│   ├── dashboard.html        ← own stats (user) / system-wide stats (admin)
+│   ├── calculator.html       ← applicant-only: EMI calculator
+│   ├── compare.html          ← applicant-only: scenario comparison
+│   └── admin.html            ← admin-only: system ledger / user management
 │
 ├── static/
 │   ├── css/
-│   │   ├── style.css       ← core design system + case-file/ledger theme
+│   │   ├── style.css         ← core design system + case-file/ledger theme
 │   │   └── landing.css
 │   └── js/
 │       ├── form.js
 │       └── theme.js
 │
-├── app.py                  ← Flask routes, SHAP, SQLite, auth, admin, email, PDF
-├── auth.py                 ← User model, password hashing, admin helpers
-├── train_model.py          ← RF vs XGBoost vs LightGBM + cross-validation
+├── app.py                    ← Flask routes, SHAP, SQLite, auth, admin, email, PDF
+├── auth.py                   ← User model, password hashing, reset tokens, admin helpers
+├── train_model.py            ← RF vs XGBoost vs LightGBM + cross-validation
 ├── requirements.txt
 └── README.md
 ```
@@ -119,12 +124,15 @@ Loan-Approval-System/
 | `/welcome` | Public | Landing page |
 | `/signup` | Public | Create account |
 | `/login` | Public | Sign in |
+| `/forgot-password` | Public | Request password reset email |
+| `/reset-password/<token>` | Public (one-time) | Set new password from email link |
+| `/change-password` | User & Admin | Change your own password |
 | `/` | User only | Loan application form |
 | `/compare` | User only | Compare 3 loan scenarios |
 | `/calculator` | User only | EMI calculator |
 | `/history` | User & Admin | Own history (user) / all applications (admin) |
 | `/dashboard` | User & Admin | Own stats (user) / system-wide stats (admin) |
-| `/admin` | Admin only | User management — block, delete, export |
+| `/admin` | Admin only | System ledger — block, delete, export users |
 | `/download-report` | User only | PDF report of last prediction |
 | `/export-csv` | User & Admin | CSV export, scoped to role |
 
@@ -142,6 +150,12 @@ python app.py
 Open `http://127.0.0.1:5000`
 
 The **first account you sign up** automatically becomes the admin.
+
+To enable email notifications and password-reset emails, set your Gmail credentials in `app.py`:
+```python
+app.config['MAIL_USERNAME'] = 'your-email@gmail.com'
+app.config['MAIL_PASSWORD'] = 'your-app-password'
+```
 
 ---
 
