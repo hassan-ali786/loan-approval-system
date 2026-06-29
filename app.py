@@ -18,7 +18,9 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
 from auth import (
     User, init_user_db, create_user, get_user_by_email, get_user_by_id,
-    verify_password, get_all_users, toggle_block_user, delete_user, is_user_blocked
+    verify_password, get_all_users, toggle_block_user, delete_user, is_user_blocked,
+    get_password_hash, update_password,
+    init_reset_table, create_reset_token, get_reset_token, mark_token_used
 )
 from functools import wraps
 
@@ -93,6 +95,7 @@ def init_db():
 
 init_db()
 init_user_db()
+init_reset_table()
 
 
 # ─────────────────────────────────────────
@@ -200,6 +203,83 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for("login"))
+
+
+@app.route("/change-password", methods=["GET", "POST"])
+@login_required
+def change_password():
+    """Let any logged-in user (including admins) change their own password."""
+    if request.method == "POST":
+        current_pw = request.form.get("current_password", "")
+        new_pw      = request.form.get("new_password", "")
+        confirm_pw  = request.form.get("confirm_password", "")
+
+        stored_hash = get_password_hash(current_user.id)
+        if not stored_hash or not verify_password(stored_hash, current_pw):
+            return render_template("change_password.html", error="Current password is incorrect.")
+        if len(new_pw) < 6:
+            return render_template("change_password.html", error="New password must be at least 6 characters.")
+        if new_pw != confirm_pw:
+            return render_template("change_password.html", error="New passwords do not match.")
+
+        update_password(current_user.id, new_pw)
+        return render_template("change_password.html", success="Password updated successfully.")
+
+    return render_template("change_password.html")
+
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    """Request a password reset link via email."""
+    if request.method == "POST":
+        email = request.form.get("email", "").strip()
+        row   = get_user_by_email(email)
+        if row:
+            token = create_reset_token(row[0])
+            reset_url = url_for("reset_password", token=token, _external=True)
+            try:
+                msg = Message(
+                    subject="LoanIQ — Reset your password",
+                    recipients=[email],
+                    html=f"""
+                    <div style="font-family:Arial,sans-serif; max-width:480px; margin:auto;">
+                        <h2 style="color:#0D1B2A;">LoanIQ — Password Reset</h2>
+                        <p>We received a request to reset your password.</p>
+                        <p><a href="{reset_url}" style="background:#B8902F; color:#0B0E14; padding:10px 20px;
+                           border-radius:8px; text-decoration:none; display:inline-block;">Reset Password</a></p>
+                        <p style="color:#888; font-size:12px;">This link is valid for one use only. If you didn't request this, ignore this email.</p>
+                    </div>
+                    """
+                )
+                mail.send(msg)
+            except Exception as e:
+                print(f"Email error: {e}")
+        # Always show the same message — don't reveal whether the email exists
+        return render_template("forgot_password.html",
+            success="If an account exists for that email, a reset link has been sent.")
+    return render_template("forgot_password.html")
+
+
+@app.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    """Reset password using a valid one-time token."""
+    token_data = get_reset_token(token)
+    if not token_data or token_data[2] == 1:
+        return render_template("reset_password.html", invalid=True)
+
+    if request.method == "POST":
+        new_pw     = request.form.get("new_password", "")
+        confirm_pw = request.form.get("confirm_password", "")
+        if len(new_pw) < 6:
+            return render_template("reset_password.html", token=token, error="Password must be at least 6 characters.")
+        if new_pw != confirm_pw:
+            return render_template("reset_password.html", token=token, error="Passwords do not match.")
+
+        update_password(token_data[0], new_pw)
+        mark_token_used(token)
+        return redirect(url_for("login", reset=1))
+
+    return render_template("reset_password.html", token=token)
 
 
 # ─────────────────────────────────────────
