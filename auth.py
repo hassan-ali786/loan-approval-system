@@ -106,6 +106,77 @@ def verify_password(stored_hash, password):
     return check_password_hash(stored_hash, password)
 
 
+def get_password_hash(user_id):
+    """Fetch a user's current password hash — used to verify current password before a change."""
+    conn = sqlite3.connect("history.db")
+    c    = conn.cursor()
+    c.execute("SELECT password_hash FROM users WHERE id = ?", (user_id,))
+    row  = c.fetchone()
+    conn.close()
+    return row[0] if row else None
+
+
+def update_password(user_id, new_password):
+    """Set a new password hash for a user."""
+    conn = sqlite3.connect("history.db")
+    c    = conn.cursor()
+    c.execute("UPDATE users SET password_hash = ? WHERE id = ?",
+              (generate_password_hash(new_password), user_id))
+    conn.commit()
+    conn.close()
+
+
+# ─────────────────────────────────────────
+# Forgot-password reset tokens
+# ─────────────────────────────────────────
+def init_reset_table():
+    conn = sqlite3.connect("history.db")
+    c    = conn.cursor()
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS reset_tokens (
+            token      TEXT PRIMARY KEY,
+            user_id    INTEGER NOT NULL,
+            created_at TEXT,
+            used       INTEGER DEFAULT 0
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+
+def create_reset_token(user_id):
+    """Generate and store a one-time password reset token. Returns the token string."""
+    import secrets
+    token = secrets.token_urlsafe(32)
+    conn = sqlite3.connect("history.db")
+    c    = conn.cursor()
+    c.execute('''
+        INSERT INTO reset_tokens (token, user_id, created_at, used)
+        VALUES (?, ?, datetime('now'), 0)
+    ''', (token, user_id))
+    conn.commit()
+    conn.close()
+    return token
+
+
+def get_reset_token(token):
+    """Look up a reset token. Returns (user_id, created_at, used) or None."""
+    conn = sqlite3.connect("history.db")
+    c    = conn.cursor()
+    c.execute("SELECT user_id, created_at, used FROM reset_tokens WHERE token = ?", (token,))
+    row = c.fetchone()
+    conn.close()
+    return row
+
+
+def mark_token_used(token):
+    conn = sqlite3.connect("history.db")
+    c    = conn.cursor()
+    c.execute("UPDATE reset_tokens SET used = 1 WHERE token = ?", (token,))
+    conn.commit()
+    conn.close()
+
+
 # ─────────────────────────────────────────
 # Admin helpers
 # ─────────────────────────────────────────
