@@ -237,3 +237,59 @@ def is_user_blocked(user_id):
     row = c.fetchone()
     conn.close()
     return bool(row[0]) if row else False
+
+
+# ─────────────────────────────────────────
+# Notifications
+# ─────────────────────────────────────────
+def init_notifications_table():
+    conn = sqlite3.connect("history.db")
+    c    = conn.cursor()
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS notifications (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            message    TEXT NOT NULL,
+            is_read    INTEGER DEFAULT 0,
+            created_at TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+
+def add_notification(message):
+    """Store a new admin notification."""
+    conn = sqlite3.connect("history.db")
+    c    = conn.cursor()
+    c.execute("INSERT INTO notifications (message, is_read, created_at) VALUES (?, 0, datetime('now'))",
+              (message,))
+    conn.commit()
+    conn.close()
+
+
+def get_notifications(limit=20):
+    """Fetch latest notifications for admin bell."""
+    conn = sqlite3.connect("history.db")
+    c    = conn.cursor()
+    c.execute("SELECT id, message, is_read, created_at FROM notifications ORDER BY id DESC LIMIT ?", (limit,))
+    rows = c.fetchall()
+    conn.close()
+    return rows
+
+
+def get_unread_count():
+    """Count of unread notifications — shown on bell badge."""
+    conn = sqlite3.connect("history.db")
+    c    = conn.cursor()
+    c.execute("SELECT COUNT(*) FROM notifications WHERE is_read = 0")
+    count = c.fetchone()[0]
+    conn.close()
+    return count
+
+
+def mark_notifications_read():
+    conn = sqlite3.connect("history.db")
+    c    = conn.cursor()
+    c.execute("UPDATE notifications SET is_read = 1")
+    conn.commit()
+    conn.close()
