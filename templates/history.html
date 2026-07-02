@@ -34,9 +34,9 @@
             <div>
                 <h1>{% if is_admin_view %}All Applications{% else %}Prediction History{% endif %}</h1>
                 <p>
-                    {% if active_filter %}Showing {{ active_filter }} only · <a href="/history" style="color:var(--gold);">Clear filter</a>
-                    {% elif is_admin_view %}Last 100 applications across all users
-                    {% else %}Last 50 applications processed{% endif %}
+                    {% if active_filter %}Showing {{ active_filter }} only · <a href="/history" style="color:var(--brass-light);">Clear filter</a>
+                    {% elif is_admin_view %}Last 100 applications across all users ({{ total }} total)
+                    {% else %}{{ total }} applications on file{% endif %}
                 </p>
                 <div class="gold-line"></div>
             </div>
@@ -53,36 +53,49 @@
                         <th>Time</th>
                         <th>Decision</th>
                         <th>Confidence</th>
-                        <th>Risk Score</th>
+                        <th>Risk</th>
                         <th>Income</th>
-                        <th>Loan Amt</th>
+                        <th>Loan</th>
                         <th>Max Loan</th>
                         <th>Credit</th>
+                        {% if is_admin_view %}<th>Officer Note</th>{% endif %}
                     </tr>
                 </thead>
                 <tbody>
                 {% for row in rows %}
                 <tr>
-                    <td style="color:var(--muted); font-family:'IBM Plex Mono',monospace;">{{ row[0] }}</td>
+                    <td class="mono-cell muted-cell">{{ row[0] }}</td>
                     {% if is_admin_view %}
-                    <td style="font-weight:600;">{{ row[10] or "—" }}</td>
+                    <td class="strong-cell">{{ row[10] or "—" }}</td>
                     {% endif %}
-                    <td style="color:var(--muted); font-size:12px;">{{ row[1] }}</td>
+                    <td class="muted-cell small-cell">{{ row[1] }}</td>
                     <td>
                         <span class="pill {% if row[2] == 'Approved' %}pill-approved{% else %}pill-rejected{% endif %}">
                             {% if row[2] == 'Approved' %}✓{% else %}✕{% endif %} {{ row[2] }}
                         </span>
                     </td>
-                    <td style="font-family:'IBM Plex Mono',monospace; color:var(--brass-light);">{{ row[3] }}%</td>
-                    <td style="font-family:'IBM Plex Mono',monospace;">{{ row[4] }} / 100</td>
-                    <td style="font-family:'IBM Plex Mono',monospace;">{{ row[5] }}</td>
-                    <td style="font-family:'IBM Plex Mono',monospace;">{{ row[6] }}k</td>
-                    <td style="font-family:'IBM Plex Mono',monospace; color:var(--brass-light);">{{ row[9] }}k</td>
+                    <td class="mono-cell" style="color:var(--brass-light);">{{ row[3] }}%</td>
+                    <td class="mono-cell">{{ row[4] }}/100</td>
+                    <td class="mono-cell">{{ row[5] }}</td>
+                    <td class="mono-cell">{{ row[6] }}k</td>
+                    <td class="mono-cell" style="color:var(--brass-light);">{{ row[9] }}k</td>
                     <td>
                         <span class="pill {% if row[7] == 1 %}pill-approved{% else %}pill-rejected{% endif %}">
                             {% if row[7] == 1 %}Good{% else %}Poor{% endif %}
                         </span>
                     </td>
+                    {% if is_admin_view %}
+                    <td>
+                        <form method="POST" action="/admin/note/{{ row[0] }}" class="note-form">
+                            <input type="text" name="note"
+                                   value="{{ row[11] if row|length > 11 and row[11] else '' }}"
+                                   placeholder="Add note…"
+                                   class="note-input"
+                                   maxlength="500">
+                            <button type="submit" class="ledger-btn note-save-btn">Save</button>
+                        </form>
+                    </td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
                 </tbody>
@@ -93,6 +106,19 @@
             <p>No predictions yet.</p>
             {% if not is_admin_view %}
             <a href="/" class="btn btn-primary">Make First Application</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Pagination -->
+        {% if total_pages > 1 %}
+        <div class="pagination-row">
+            {% if page > 1 %}
+            <a href="/history?page={{ page-1 }}{% if active_filter %}&filter={{ active_filter }}{% endif %}" class="ledger-btn page-btn">← Prev</a>
+            {% endif %}
+            <span class="mono-cell muted-cell">Page {{ page }} of {{ total_pages }}</span>
+            {% if page < total_pages %}
+            <a href="/history?page={{ page+1 }}{% if active_filter %}&filter={{ active_filter }}{% endif %}" class="ledger-btn page-btn">Next →</a>
             {% endif %}
         </div>
         {% endif %}
