@@ -20,7 +20,9 @@ from auth import (
     User, init_user_db, create_user, get_user_by_email, get_user_by_id,
     verify_password, get_all_users, toggle_block_user, delete_user, is_user_blocked,
     get_password_hash, update_password,
-    init_reset_table, create_reset_token, get_reset_token, mark_token_used
+    init_reset_table, create_reset_token, get_reset_token, mark_token_used,
+    init_notifications_table, add_notification, get_notifications,
+    get_unread_count, mark_notifications_read
 )
 from functools import wraps
 
@@ -47,6 +49,27 @@ def admin_required(f):
             return redirect(url_for("home"))
         return f(*args, **kwargs)
     return wrapper
+
+
+@app.context_processor
+def inject_notifications():
+    """Make unread notification count available in every template."""
+    if current_user.is_authenticated and getattr(current_user, 'is_admin', False):
+        return {"unread_count": get_unread_count()}
+    return {"unread_count": 0}
+
+
+@app.route("/admin/notifications")
+@login_required
+@admin_required
+def admin_notifications():
+    """Return notifications as JSON for the bell dropdown."""
+    notifications = get_notifications(limit=20)
+    mark_notifications_read()
+    return jsonify([
+        {"id": n[0], "message": n[1], "is_read": n[2], "created_at": n[3]}
+        for n in notifications
+    ])
 
 # ─────────────────────────────────────────
 # Flask-Mail setup (configure your SMTP)
@@ -96,6 +119,7 @@ def init_db():
 init_db()
 init_user_db()
 init_reset_table()
+init_notifications_table()
 
 
 # ─────────────────────────────────────────
@@ -174,6 +198,7 @@ def signup():
         if len(password) < 6:
             return render_template("signup.html", error="Password must be at least 6 characters.")
         if create_user(username, email, password):
+            add_notification(f"New user registered: {username} ({email})")
             return redirect(url_for("login", registered=1))
         return render_template("signup.html", error="Username or email already taken.")
     return render_template("signup.html")
@@ -394,36 +419,49 @@ def history():
     """
     Regular users see only their own predictions.
     Admins see every prediction across all users, with the applicant's username shown.
-    Supports ?filter=Approved/Rejected.
+    Supports ?filter=Approved/Rejected and ?page=N pagination.
     """
     filter_result = request.args.get('filter')
     is_admin_view = getattr(current_user, 'is_admin', False)
+    page          = max(1, int(request.args.get('page', 1)))
+    per_page      = 15
 
     conn = sqlite3.connect("history.db")
     c    = conn.cursor()
 
     if is_admin_view:
-        query = '''
-            SELECT p.*, u.username
-            FROM predictions p
-            LEFT JOIN users u ON u.id = p.user_id
-        '''
-        params = []
-        if filter_result in ("Approved", "Rejected"):
-            query  += " WHERE p.result = ?"
-            params.append(filter_result)
-        query += " ORDER BY p.id DESC LIMIT 100"
-        c.execute(query, params)
-    else:
-        if filter_result in ("Approved", "Rejected"):
-            c.execute("SELECT * FROM predictions WHERE user_id = ? AND result = ? ORDER BY id DESC LIMIT 50",
-                       (current_user.id, filter_result))
-        else:
-            c.execute("SELECT * FROM predictions WHERE user_id = ? ORDER BY id DESC LIMIT 50", (current_user.id,))
+        base  = "FROM predictions p LEFT JOIN users u ON u.id = p.user_id"
+        where = "WHERE p.result = ?" if filter_result in ("Approved","Rejected") else ""
+        params = [filter_result] if filter_result in ("Approved","Rejected") else []
 
-    rows = c.fetchall()
+        c.execute(f"SELECT COUNT(*) {base} {where}", params)
+        total = c.fetchone()[0]
+        c.execute(f"SELECT p.*, u.username {base} {where} ORDER BY p.id DESC LIMIT ? OFFSET ?",
+                  params + [per_page, (page-1)*per_page])
+    else:
+        base  = "FROM predictions WHERE user_id = ?"
+        params = [current_user.id]
+        if filter_result in ("Approved","Rejected"):
+            base  += " AND result = ?"
+            params.append(filter_result)
+
+        c.execute(f"SELECT COUNT(*) {base}", params)
+        total = c.fetchone()[0]
+        c.execute(f"SELECT * {base} ORDER BY id DESC LIMIT ? OFFSET ?",
+                  params + [per_page, (page-1)*per_page])
+
+    rows        = c.fetchall()
+    total_pages = max(1, (total + per_page - 1) // per_page)
     conn.close()
-    return render_template("history.html", rows=rows, active_filter=filter_result, is_admin_view=is_admin_view)
+
+    return render_template("history.html",
+        rows=rows,
+        active_filter=filter_result,
+        is_admin_view=is_admin_view,
+        page=page,
+        total_pages=total_pages,
+        total=total
+    )
 
 
 @app.route("/export-csv")
@@ -593,7 +631,12 @@ def calculator():
 @login_required
 @admin_required
 def admin_panel():
-    """Full admin overview — system stats + user list."""
+    """Full admin overview — system stats + searchable, filterable, paginated user list."""
+    search     = request.args.get('search', '').strip()
+    status     = request.args.get('status', 'all')   # all | active | blocked
+    page       = max(1, int(request.args.get('page', 1)))
+    per_page   = 10
+
     conn = sqlite3.connect("history.db")
     c    = conn.cursor()
 
@@ -609,9 +652,37 @@ def admin_panel():
     c.execute("SELECT AVG(probability) FROM predictions")
     avg_prob = round(c.fetchone()[0] or 0, 1)
 
-    conn.close()
+    # Build filtered user query
+    where_clauses = []
+    params        = []
+    if search:
+        where_clauses.append("(u.username LIKE ? OR u.email LIKE ?)")
+        params += [f'%{search}%', f'%{search}%']
+    if status == 'active':
+        where_clauses.append("u.is_blocked = 0")
+    elif status == 'blocked':
+        where_clauses.append("u.is_blocked = 1")
 
-    users = get_all_users()
+    where_sql = ("WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
+
+    # Total filtered count for pagination
+    c.execute(f"SELECT COUNT(*) FROM users u {where_sql}", params)
+    total_filtered = c.fetchone()[0]
+    total_pages    = max(1, (total_filtered + per_page - 1) // per_page)
+    offset         = (page - 1) * per_page
+
+    c.execute(f'''
+        SELECT u.id, u.username, u.email, u.is_admin, u.is_blocked, u.created_at,
+               COUNT(p.id) as prediction_count
+        FROM users u
+        LEFT JOIN predictions p ON p.user_id = u.id
+        {where_sql}
+        GROUP BY u.id
+        ORDER BY u.id ASC
+        LIMIT ? OFFSET ?
+    ''', params + [per_page, offset])
+    users = c.fetchall()
+    conn.close()
 
     return render_template("admin.html",
         total_users=total_users,
@@ -619,7 +690,12 @@ def admin_panel():
         approved=counts.get("Approved", 0),
         rejected=counts.get("Rejected", 0),
         avg_prob=avg_prob,
-        users=users
+        users=users,
+        search=search,
+        status=status,
+        page=page,
+        total_pages=total_pages,
+        total_filtered=total_filtered
     )
 
 
@@ -654,6 +730,55 @@ def admin_delete_user(user_id):
     deleted = delete_user(user_id)
     if not deleted:
         flash("Could not delete this user — admins are protected.")
+    return redirect(url_for("admin_panel"))
+
+
+@app.route("/admin/note/<int:prediction_id>", methods=["POST"])
+@login_required
+@admin_required
+def admin_add_note(prediction_id):
+    """Admin adds or updates a note on a specific prediction."""
+    note = request.form.get("note", "").strip()[:500]  # max 500 chars
+
+    conn = sqlite3.connect("history.db")
+    c    = conn.cursor()
+
+    # Add officer_note column if it doesn't exist yet
+    try:
+        c.execute("ALTER TABLE predictions ADD COLUMN officer_note TEXT DEFAULT NULL")
+    except Exception:
+        pass
+
+    c.execute("UPDATE predictions SET officer_note = ? WHERE id = ?", (note, prediction_id))
+    conn.commit()
+    conn.close()
+
+    # Return to history, preserving page/filter params
+    referrer = request.referrer or url_for("history")
+    return redirect(referrer)
+
+
+@app.route("/admin/retrain", methods=["POST"])
+@login_required
+@admin_required
+def admin_retrain():
+    """Retrain the model using the existing dataset. Reloads the model in memory after training."""
+    global model, explainer
+    try:
+        import subprocess
+        result = subprocess.run(
+            ["python", "train_model.py"],
+            capture_output=True, text=True, timeout=120
+        )
+        if result.returncode == 0:
+            model    = pickle.load(open("model/loan_model.pkl", "rb"))
+            explainer = shap.TreeExplainer(model)
+            add_notification("Model retrained successfully by admin.")
+            flash("Model retrained successfully.")
+        else:
+            flash(f"Retrain failed: {result.stderr[:200]}")
+    except Exception as e:
+        flash(f"Retrain error: {str(e)[:200]}")
     return redirect(url_for("admin_panel"))
 
 
