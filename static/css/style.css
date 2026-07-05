@@ -1374,3 +1374,23 @@ body {
 }
 .note-input:focus { border-color: var(--brass); }
 .note-save-btn { padding: 5px 10px; font-size: 10px; }
+
+/* ========================
+   ACTIVITY LOG TAGS
+   ======================== */
+.activity-tag {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 3px;
+}
+.activity-login      { background: rgba(74,222,148,0.1);  color: var(--ledger-text); }
+.activity-logout     { background: rgba(138,155,176,0.1); color: var(--ink-muted); }
+.activity-prediction { background: rgba(184,144,47,0.1);  color: var(--brass-light); }
+.activity-block      { background: rgba(231,116,107,0.1); color: var(--stamp-text); }
+.activity-delete     { background: rgba(122,46,46,0.2);   color: var(--stamp-text); }
+.activity-retrain    { background: rgba(74,222,148,0.1);  color: var(--ledger-text); }
