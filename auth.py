@@ -293,3 +293,112 @@ def mark_notifications_read():
     c.execute("UPDATE notifications SET is_read = 1")
     conn.commit()
     conn.close()
+
+
+# ─────────────────────────────────────────
+# Email verification tokens
+# ─────────────────────────────────────────
+def init_verification_table():
+    conn = sqlite3.connect("history.db")
+    c    = conn.cursor()
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS email_verifications (
+            token      TEXT PRIMARY KEY,
+            user_id    INTEGER NOT NULL,
+            created_at TEXT,
+            used       INTEGER DEFAULT 0
+        )
+    ''')
+    # Add is_verified column to users if not exists
+    try:
+        c.execute("ALTER TABLE users ADD COLUMN is_verified INTEGER DEFAULT 0")
+    except Exception:
+        pass
+    conn.commit()
+    conn.close()
+
+
+def create_verification_token(user_id):
+    """Generate and store a one-time email verification token."""
+    import secrets
+    token = secrets.token_urlsafe(32)
+    conn  = sqlite3.connect("history.db")
+    c     = conn.cursor()
+    c.execute('''
+        INSERT INTO email_verifications (token, user_id, created_at, used)
+        VALUES (?, ?, datetime('now'), 0)
+    ''', (token, user_id))
+    conn.commit()
+    conn.close()
+    return token
+
+
+def verify_email_token(token):
+    """Mark email as verified. Returns user_id on success or None."""
+    conn = sqlite3.connect("history.db")
+    c    = conn.cursor()
+    c.execute("SELECT user_id, used FROM email_verifications WHERE token = ?", (token,))
+    row  = c.fetchone()
+    if not row or row[1] == 1:
+        conn.close()
+        return None
+    c.execute("UPDATE users SET is_verified = 1 WHERE id = ?", (row[0],))
+    c.execute("UPDATE email_verifications SET used = 1 WHERE token = ?", (token,))
+    conn.commit()
+    conn.close()
+    return row[0]
+
+
+def is_user_verified(user_id):
+    conn = sqlite3.connect("history.db")
+    c    = conn.cursor()
+    c.execute("SELECT is_verified FROM users WHERE id = ?", (user_id,))
+    row = c.fetchone()
+    conn.close()
+    return bool(row[0]) if row else False
+
+
+# ─────────────────────────────────────────
+# Activity log
+# ─────────────────────────────────────────
+def init_activity_log():
+    conn = sqlite3.connect("history.db")
+    c    = conn.cursor()
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS activity_log (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id    INTEGER,
+            username   TEXT,
+            action     TEXT NOT NULL,
+            detail     TEXT,
+            ip_address TEXT,
+            created_at TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+
+def log_activity(user_id, username, action, detail="", ip_address=""):
+    """Record a user action in the activity log."""
+    conn = sqlite3.connect("history.db")
+    c    = conn.cursor()
+    c.execute('''
+        INSERT INTO activity_log (user_id, username, action, detail, ip_address, created_at)
+        VALUES (?, ?, ?, ?, ?, datetime('now'))
+    ''', (user_id, username, action, detail, ip_address))
+    conn.commit()
+    conn.close()
+
+
+def get_activity_log(limit=50):
+    """Fetch recent activity log entries for admin."""
+    conn = sqlite3.connect("history.db")
+    c    = conn.cursor()
+    c.execute('''
+        SELECT id, username, action, detail, ip_address, created_at
+        FROM activity_log ORDER BY id DESC LIMIT ?
+    ''', (limit,))
+    rows = c.fetchall()
+    conn.close()
+    return rows

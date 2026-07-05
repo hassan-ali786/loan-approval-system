@@ -6,6 +6,8 @@ import numpy as np
 import pandas as pd
 import sqlite3
 import shap
+import lime
+import lime.lime_tabular
 import json
 import csv
 import io
@@ -22,7 +24,9 @@ from auth import (
     get_password_hash, update_password,
     init_reset_table, create_reset_token, get_reset_token, mark_token_used,
     init_notifications_table, add_notification, get_notifications,
-    get_unread_count, mark_notifications_read
+    get_unread_count, mark_notifications_read,
+    init_verification_table, create_verification_token, verify_email_token, is_user_verified,
+    init_activity_log, log_activity, get_activity_log
 )
 from functools import wraps
 
@@ -91,6 +95,34 @@ model    = pickle.load(open("model/loan_model.pkl", "rb"))
 FEATURES = pickle.load(open("model/features.pkl", "rb"))
 explainer = shap.TreeExplainer(model)
 
+# LIME explainer — built from training data at startup
+try:
+    _train_df = pd.read_csv("dataset/train.csv")
+    _train_df['Dependents']    = _train_df['Dependents'].replace('3+', 3)
+    _train_df['Dependents']    = pd.to_numeric(_train_df['Dependents'], errors='coerce').fillna(0)
+    _train_df['Gender']        = _train_df['Gender'].map({'Male': 1, 'Female': 0}).fillna(1)
+    _train_df['Married']       = _train_df['Married'].map({'Yes': 1, 'No': 0}).fillna(1)
+    _train_df['Education']     = _train_df['Education'].map({'Graduate': 1, 'Not Graduate': 0}).fillna(1)
+    _train_df['Self_Employed'] = _train_df['Self_Employed'].map({'Yes': 1, 'No': 0}).fillna(0)
+    _train_df['Property_Area'] = _train_df['Property_Area'].map({'Urban': 2, 'Semiurban': 1, 'Rural': 0}).fillna(2)
+    _train_df['TotalIncome']        = _train_df['ApplicantIncome'] + _train_df['CoapplicantIncome']
+    _train_df['EMI']                = _train_df['LoanAmount'] / _train_df['Loan_Amount_Term'].replace(0, 1)
+    _train_df['IncomePerDependent'] = _train_df['TotalIncome'] / (_train_df['Dependents'] + 1)
+    _train_df['LoanIncomeRatio']    = _train_df['LoanAmount'] / (_train_df['TotalIncome'] + 1)
+    _train_X = _train_df[FEATURES].fillna(0).values
+
+    lime_explainer = lime.lime_tabular.LimeTabularExplainer(
+        training_data=_train_X,
+        feature_names=FEATURES,
+        class_names=["Rejected", "Approved"],
+        mode="classification",
+        discretize_continuous=True,
+        random_state=42
+    )
+except Exception as _e:
+    lime_explainer = None
+    print(f"LIME explainer init failed (dataset missing?): {_e}")
+
 # ─────────────────────────────────────────
 # DB init
 # ─────────────────────────────────────────
@@ -120,6 +152,8 @@ init_db()
 init_user_db()
 init_reset_table()
 init_notifications_table()
+init_verification_table()
+init_activity_log()
 
 
 # ─────────────────────────────────────────
@@ -137,7 +171,38 @@ def get_shap_factors(X_input):
     return [{"feature": k, "value": round(v, 4), "abs_value": round(abs(v), 4), "width": min(round(abs(v) * 300, 1), 100)} for k, v in pairs]
 
 
-def compute_risk_score(proba_approved):
+def get_lime_factors(X_input_array, prediction_class):
+    """
+    Get top-5 LIME factors for a single prediction.
+    Returns list of {feature, effect, direction} dicts.
+    """
+    if lime_explainer is None:
+        return []
+    try:
+        exp = lime_explainer.explain_instance(
+            X_input_array,
+            model.predict_proba,
+            num_features=5,
+            top_labels=1
+        )
+        label = prediction_class  # 0=Rejected, 1=Approved
+        lime_list = exp.as_list(label=label)
+        result = []
+        for feat_desc, effect in lime_list:
+            result.append({
+                "feature":   feat_desc,
+                "effect":    round(effect, 4),
+                "abs_effect": round(abs(effect), 4),
+                "direction": "positive" if effect > 0 else "negative",
+                "width":     min(round(abs(effect) * 500, 1), 100)
+            })
+        return result
+    except Exception as e:
+        print(f"LIME error: {e}")
+        return []
+
+
+
     """Convert approval probability to 0-100 risk score."""
     return round(proba_approved * 100)
 
@@ -199,9 +264,42 @@ def signup():
             return render_template("signup.html", error="Password must be at least 6 characters.")
         if create_user(username, email, password):
             add_notification(f"New user registered: {username} ({email})")
+            # Send verification email
+            row   = get_user_by_email(email)
+            if row:
+                token       = create_verification_token(row[0])
+                verify_url  = url_for("verify_email", token=token, _external=True)
+                try:
+                    msg = Message(
+                        subject="LoanIQ — Verify your email",
+                        recipients=[email],
+                        html=f"""
+                        <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;">
+                            <h2 style="color:#0D1B2A;">LoanIQ — Email Verification</h2>
+                            <p>Hi <strong>{username}</strong>, welcome to LoanIQ!</p>
+                            <p>Please verify your email address to unlock full access.</p>
+                            <p><a href="{verify_url}" style="background:#B8902F;color:#0B0E14;
+                               padding:10px 20px;border-radius:8px;text-decoration:none;
+                               display:inline-block;">Verify Email</a></p>
+                            <p style="color:#888;font-size:12px;">If you didn't create this account, ignore this email.</p>
+                        </div>
+                        """
+                    )
+                    mail.send(msg)
+                except Exception as e:
+                    print(f"Verification email error: {e}")
             return redirect(url_for("login", registered=1))
         return render_template("signup.html", error="Username or email already taken.")
     return render_template("signup.html")
+
+
+@app.route("/verify-email/<token>")
+def verify_email(token):
+    """Verify a user's email address via one-time token."""
+    user_id = verify_email_token(token)
+    if user_id:
+        return redirect(url_for("login", verified=1))
+    return render_template("login.html", error="Verification link is invalid or already used.")
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -217,6 +315,7 @@ def login():
                 return render_template("login.html", error="This account has been blocked. Contact an administrator.")
             user = User(row[0], row[1], row[2], row[4])  # includes is_admin
             login_user(user)
+            log_activity(row[0], row[1], "login", "User signed in", request.remote_addr)
             return redirect(url_for("home"))
         return render_template("login.html", error="Invalid email or password.")
     registered = request.args.get("registered")
@@ -226,6 +325,7 @@ def login():
 @app.route("/logout")
 @login_required
 def logout():
+    log_activity(current_user.id, current_user.username, "logout", "User signed out", request.remote_addr)
     logout_user()
     return redirect(url_for("login"))
 
@@ -253,7 +353,33 @@ def change_password():
     return render_template("change_password.html")
 
 
-@app.route("/forgot-password", methods=["GET", "POST"])
+@app.route("/profile")
+@login_required
+def profile():
+    """User profile page — stats, account info, verification status."""
+    if getattr(current_user, 'is_admin', False):
+        return redirect(url_for("admin_panel"))
+
+    conn = sqlite3.connect("history.db")
+    c    = conn.cursor()
+    c.execute("SELECT COUNT(*) FROM predictions WHERE user_id = ?", (current_user.id,))
+    total_predictions = c.fetchone()[0]
+    c.execute("SELECT result, COUNT(*) FROM predictions WHERE user_id = ? GROUP BY result", (current_user.id,))
+    counts = dict(c.fetchall())
+    c.execute("SELECT AVG(probability) FROM predictions WHERE user_id = ?", (current_user.id,))
+    avg_prob = round(c.fetchone()[0] or 0, 1)
+    c.execute("SELECT created_at, is_verified FROM users WHERE id = ?", (current_user.id,))
+    user_row = c.fetchone()
+    conn.close()
+
+    return render_template("profile.html",
+        total_predictions=total_predictions,
+        approved=counts.get("Approved", 0),
+        rejected=counts.get("Rejected", 0),
+        avg_prob=avg_prob,
+        joined=user_row[0] if user_row else "N/A",
+        is_verified=bool(user_row[1]) if user_row else False
+    )
 def forgot_password():
     """Request a password reset link via email."""
     if request.method == "POST":
@@ -364,6 +490,7 @@ def home():
             risk_score     = compute_risk_score(proba_approved)
             max_loan       = suggest_max_loan(total_income, loan_term, credit_history)
             top_factors    = get_shap_factors(X_input)
+            lime_factors   = get_lime_factors(X_input.values[0], int(prediction))
 
             # Persist to DB with user_id
             conn = sqlite3.connect("history.db")
@@ -400,10 +527,15 @@ def home():
                 result, probability, risk_score, max_loan
             )
 
+            # Log activity
+            log_activity(current_user.id, current_user.username,
+                         "prediction", f"Result: {result} ({probability}%)", request.remote_addr)
+
             return render_template("result.html",
                 result=result, probability=probability,
                 risk_score=risk_score, max_loan=max_loan,
-                top_factors=top_factors
+                top_factors=top_factors,
+                lime_factors=lime_factors
             )
 
         except Exception as e:
@@ -715,6 +847,8 @@ def admin_toggle_block(user_id):
         return redirect(url_for("admin_panel"))
 
     toggle_block_user(user_id)
+    log_activity(current_user.id, current_user.username, "block",
+                 f"Toggled block status for user_id={user_id}", request.remote_addr)
     return redirect(url_for("admin_panel"))
 
 
@@ -728,7 +862,10 @@ def admin_delete_user(user_id):
         return redirect(url_for("admin_panel"))
 
     deleted = delete_user(user_id)
-    if not deleted:
+    if deleted:
+        log_activity(current_user.id, current_user.username, "delete",
+                     f"Deleted user_id={user_id} and their predictions", request.remote_addr)
+    else:
         flash("Could not delete this user — admins are protected.")
     return redirect(url_for("admin_panel"))
 
@@ -780,6 +917,15 @@ def admin_retrain():
     except Exception as e:
         flash(f"Retrain error: {str(e)[:200]}")
     return redirect(url_for("admin_panel"))
+
+
+@app.route("/admin/activity-log")
+@login_required
+@admin_required
+def admin_activity_log():
+    """Full activity log — all user actions."""
+    logs = get_activity_log(limit=100)
+    return render_template("activity_log.html", logs=logs)
 
 
 @app.route("/admin/export-users-csv")
