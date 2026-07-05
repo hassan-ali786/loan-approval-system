@@ -69,6 +69,23 @@
             {% endfor %}
         </div>
 
+        {% if lime_factors %}
+        <div class="ledger" style="margin-top:16px;">
+            <div class="ledger-head">
+                <span>LIME explanation</span>
+                <span>Effect</span>
+            </div>
+            {% for f in lime_factors %}
+            <div class="ledger-row">
+                <span class="ledger-item" style="font-size:11px;">{{ f.feature }}</span>
+                <span class="ledger-mark {% if f.effect > 0 %}credit{% else %}debit{% endif %}">
+                    <span class="ledger-sign">{% if f.effect > 0 %}+{% else %}−{% endif %}</span>{{ f.abs_effect }}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
         <div class="result-note">
             {% if result == "Approved" %}
             This profile meets the lending criteria on file. A representative may request documents to finalize the decision.
