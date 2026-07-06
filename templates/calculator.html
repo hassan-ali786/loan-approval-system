@@ -5,23 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LoanIQ — EMI Calculator</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 </head>
 <body>
 
 <nav class="navbar">
     <div class="nav-logo">Loan<span>IQ</span></div>
     <div class="nav-links">
-        {% if current_user.is_admin %}
-        <a href="/admin">Admin Panel</a>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/history">All History</a>
-        {% else %}
         <a href="/">Apply</a>
         <a href="/history">History</a>
         <a href="/dashboard">Dashboard</a>
         <a href="/calculator">EMI Calc</a>
         <a href="/compare">Compare</a>
-        {% endif %}
+        <a href="/profile">Profile</a>
         <a href="/change-password">Password</a>
         <a href="/logout">Logout</a>
         <button class="theme-btn" id="themeToggle">☀️</button>
@@ -30,10 +26,9 @@
 
 <div class="container">
     <div class="card">
-        <div class="card-header">
-            <h1>EMI Calculator</h1>
-            <p>Calculate your monthly loan installment</p>
-            <div class="gold-line"></div>
+        <div class="case-header">
+            <div class="case-ref">Repayment schedule calculator</div>
+            <div class="case-title">EMI calculator</div>
         </div>
 
         <div class="form-row">
@@ -54,39 +49,40 @@
         </div>
 
         <div class="btn-row">
-            <button class="btn btn-primary" onclick="calcEMI()">Calculate EMI</button>
+            <button class="btn btn-primary" onclick="calcEMI()">Calculate</button>
             <button class="btn btn-ghost" onclick="resetCalc()">Reset</button>
         </div>
 
-        <div class="emi-result" id="emiResult" style="display:none; margin-top:28px;">
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <div class="stat-box-label">Monthly EMI</div>
-                    <div class="stat-box-num gold" id="emiVal">—</div>
+        <div id="emiResult" style="display:none; margin-top:28px;">
+            <div class="seal-row">
+                <div class="seal-box">
+                    <div class="seal-label">Monthly EMI</div>
+                    <div class="seal-value" id="emiVal">—</div>
                 </div>
-                <div class="stat-box">
-                    <div class="stat-box-label">Total Payment</div>
-                    <div class="stat-box-num" id="totalVal">—</div>
+                <div class="seal-box">
+                    <div class="seal-label">Total payment</div>
+                    <div class="seal-value" id="totalVal">—</div>
                 </div>
-                <div class="stat-box">
-                    <div class="stat-box-label">Principal</div>
-                    <div class="stat-box-num green" id="principalVal">—</div>
+                <div class="seal-box seal-credit">
+                    <div class="seal-label">Principal</div>
+                    <div class="seal-value" id="principalVal">—</div>
                 </div>
-                <div class="stat-box">
-                    <div class="stat-box-label">Total Interest</div>
-                    <div class="stat-box-num red" id="interestVal">—</div>
+                <div class="seal-box seal-debit">
+                    <div class="seal-label">Total interest</div>
+                    <div class="seal-value" id="interestVal">—</div>
                 </div>
             </div>
 
-            <div class="chart-wrap" style="margin-top:20px;">
+            <div class="ledger-section-head" style="margin-top:20px;">
+                <span>Principal vs interest breakdown</span>
+            </div>
+            <div class="ledger-chart-wrap">
                 <canvas id="emiChart" width="260" height="260"></canvas>
             </div>
         </div>
-
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 <script>
 let emiChart = null;
@@ -94,20 +90,18 @@ let emiChart = null;
 function fmt(n) {
     return '₹' + Math.round(n).toLocaleString('en-IN');
 }
-
 function getThemeTextColor() {
-    return document.documentElement.getAttribute('data-theme') === 'light' ? '#5A6A7A' : '#8A9BB0';
+    return document.documentElement.getAttribute('data-theme') === 'light' ? '#6B6458' : '#8A8576';
 }
 
 function calcEMI() {
     const P = parseFloat(document.getElementById('loanAmt').value);
     const r = parseFloat(document.getElementById('rate').value) / 12 / 100;
     const n = parseInt(document.getElementById('tenure').value);
-
     if (!P || !r || !n) return;
 
-    const emi = (P * r * Math.pow(1+r, n)) / (Math.pow(1+r, n) - 1);
-    const total = emi * n;
+    const emi      = (P * r * Math.pow(1+r, n)) / (Math.pow(1+r, n) - 1);
+    const total    = emi * n;
     const interest = total - P;
 
     document.getElementById('emiVal').textContent       = fmt(emi);
@@ -116,7 +110,6 @@ function calcEMI() {
     document.getElementById('interestVal').textContent  = fmt(interest);
     document.getElementById('emiResult').style.display  = 'block';
 
-    // Chart
     const ctx = document.getElementById('emiChart').getContext('2d');
     if (emiChart) emiChart.destroy();
     emiChart = new Chart(ctx, {
@@ -125,8 +118,8 @@ function calcEMI() {
             labels: ['Principal', 'Interest'],
             datasets: [{
                 data: [Math.round(P), Math.round(interest)],
-                backgroundColor: ['rgba(46,204,113,0.85)', 'rgba(231,76,60,0.85)'],
-                borderColor: ['#152233','#152233'],
+                backgroundColor: ['rgba(74,222,148,0.85)', 'rgba(231,116,107,0.85)'],
+                borderColor: ['#0B0E14','#0B0E14'],
                 borderWidth: 3
             }]
         },
@@ -149,7 +142,6 @@ function resetCalc() {
     document.getElementById('emiResult').style.display = 'none';
 }
 
-// Auto calc on load
 calcEMI();
 </script>
 </body>
