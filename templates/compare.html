@@ -11,17 +11,12 @@
 <nav class="navbar">
     <div class="nav-logo">Loan<span>IQ</span></div>
     <div class="nav-links">
-        {% if current_user.is_admin %}
-        <a href="/admin">Admin Panel</a>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/history">All History</a>
-        {% else %}
         <a href="/">Apply</a>
         <a href="/history">History</a>
         <a href="/dashboard">Dashboard</a>
         <a href="/calculator">EMI Calc</a>
         <a href="/compare">Compare</a>
-        {% endif %}
+        <a href="/profile">Profile</a>
         <a href="/change-password">Password</a>
         <a href="/logout">Logout</a>
         <button class="theme-btn" id="themeToggle">☀️</button>
@@ -30,10 +25,9 @@
 
 <div class="container-wide">
     <div class="card">
-        <div class="card-header">
-            <h1>Loan Scenario Comparison</h1>
-            <p>Compare up to 3 loan scenarios side by side</p>
-            <div class="gold-line"></div>
+        <div class="case-header">
+            <div class="case-ref">Side-by-side eligibility analysis</div>
+            <div class="case-title">Scenario comparison</div>
         </div>
 
         <form method="POST">
@@ -72,14 +66,16 @@
                 {% endfor %}
             </div>
 
-            <div class="btn-row" style="margin-top:20px;">
-                <button type="submit" class="btn btn-primary">Compare Scenarios</button>
+            <div class="btn-row" style="margin-top:24px;">
+                <button type="submit" class="btn btn-primary">Run Comparison</button>
                 <a href="/" class="btn btn-ghost">Back to Form</a>
             </div>
         </form>
 
         {% if results %}
-        <div class="section-label" style="margin-top:32px;">Comparison Results</div>
+        <div class="ledger-section-head" style="margin-top:32px;">
+            <span>Comparison results</span>
+        </div>
         <div class="compare-grid">
             {% for s in results %}
             <div class="compare-result-col {% if s.result == 'Approved' %}compare-approved{% else %}compare-rejected{% endif %}">
@@ -87,16 +83,17 @@
                 <div class="compare-result-decision {% if s.result == 'Approved' %}approved{% else %}rejected{% endif %}">
                     {{ s.result }}
                 </div>
-                <div class="compare-result-row"><span>Confidence</span><span>{{ s.probability }}%</span></div>
-                <div class="compare-result-row"><span>Risk Score</span><span>{{ s.risk_score }} / 100</span></div>
-                <div class="compare-result-row"><span>Max Loan</span><span>{{ s.max_loan }}k</span></div>
-                <div class="compare-result-row"><span>EMI</span><span>{{ s.emi }}k/mo</span></div>
-                <div class="compare-result-row"><span>Credit</span><span>{{ s.credit }}</span></div>
+                <div class="ledger" style="margin-top:12px;">
+                    <div class="ledger-row"><span class="ledger-item">Confidence</span><span class="mono-cell" style="font-size:13px; color:var(--brass-light);">{{ s.probability }}%</span></div>
+                    <div class="ledger-row"><span class="ledger-item">Risk score</span><span class="mono-cell" style="font-size:13px;">{{ s.risk_score }}/100</span></div>
+                    <div class="ledger-row"><span class="ledger-item">Max loan</span><span class="mono-cell" style="font-size:13px; color:var(--brass-light);">{{ s.max_loan }}k</span></div>
+                    <div class="ledger-row"><span class="ledger-item">EMI</span><span class="mono-cell" style="font-size:13px;">{{ s.emi }}k/mo</span></div>
+                    <div class="ledger-row" style="border:none;"><span class="ledger-item">Credit</span><span class="mono-cell muted-cell" style="font-size:12px;">{{ s.credit }}</span></div>
+                </div>
             </div>
             {% endfor %}
         </div>
         {% endif %}
-
     </div>
 </div>
 
