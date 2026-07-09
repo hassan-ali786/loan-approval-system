@@ -3,100 +3,260 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LoanIQ — Compare Scenarios</title>
+<title>LoanIQ — Dashboard</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 </head>
 <body>
 
 <nav class="navbar">
-    <div class="nav-logo">Loan<span>IQ</span></div>
+    <div class="navbar-inner">
+    <a href="/welcome" class="nav-logo">Loan<span>IQ</span></a>
     <div class="nav-links">
+        {% if current_user.is_admin %}
+        <a href="/admin">Admin Panel</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/history">All History</a>
+        {% else %}
         <a href="/">Apply</a>
         <a href="/history">History</a>
         <a href="/dashboard">Dashboard</a>
         <a href="/calculator">EMI Calc</a>
         <a href="/compare">Compare</a>
+        {% endif %}
         <a href="/profile">Profile</a>
         <a href="/change-password">Password</a>
         <a href="/logout">Logout</a>
         <button class="theme-btn" id="themeToggle">☀️</button>
     </div>
+    </div>
 </nav>
 
 <div class="container-wide">
     <div class="card">
+
         <div class="case-header">
-            <div class="case-ref">Side-by-side eligibility analysis</div>
-            <div class="case-title">Scenario comparison</div>
+            <div class="case-ref">
+                {% if current_user.is_admin %}System-wide records{% else %}Your application records{% endif %}
+            </div>
+            <div class="case-title">Ledger overview</div>
         </div>
 
-        <form method="POST">
-            <div class="compare-grid">
-                {% for i in [1, 2, 3] %}
-                <div class="compare-col">
-                    <div class="compare-col-header">Scenario {{ i }}</div>
-                    <div class="form-group">
-                        <label>Applicant Income</label>
-                        <input type="number" name="ApplicantIncome_{{ i }}" placeholder="5000" value="5000" min="0">
-                    </div>
-                    <div class="form-group">
-                        <label>Co-applicant Income</label>
-                        <input type="number" name="CoapplicantIncome_{{ i }}" placeholder="0" value="0" min="0">
-                    </div>
-                    <div class="form-group">
-                        <label>Loan Amount (k)</label>
-                        <input type="number" name="LoanAmount_{{ i }}" placeholder="150" value="150" min="1">
-                    </div>
-                    <div class="form-group">
-                        <label>Loan Term (months)</label>
-                        <input type="number" name="Loan_Amount_Term_{{ i }}" placeholder="360" value="360" min="12">
-                    </div>
-                    <div class="form-group">
-                        <label>Dependents</label>
-                        <input type="number" name="Dependents_{{ i }}" placeholder="0" value="0" min="0">
-                    </div>
-                    <div class="form-group">
-                        <label>Credit History</label>
-                        <select name="Credit_History_{{ i }}">
-                            <option value="1">Good</option>
-                            <option value="0">Poor</option>
-                        </select>
-                    </div>
-                </div>
-                {% endfor %}
+        <!-- Stats as seal boxes -->
+        <div class="seal-row admin-seal-row">
+            <div class="seal-box seal-credit clickable" id="statApproved">
+                <div class="seal-label">Approved</div>
+                <div class="seal-value">{{ approved }}</div>
             </div>
-
-            <div class="btn-row" style="margin-top:24px;">
-                <button type="submit" class="btn btn-primary">Run Comparison</button>
-                <a href="/" class="btn btn-ghost">Back to Form</a>
+            <div class="seal-box seal-debit clickable" id="statRejected">
+                <div class="seal-label">Rejected</div>
+                <div class="seal-value">{{ rejected }}</div>
             </div>
-        </form>
-
-        {% if results %}
-        <div class="ledger-section-head" style="margin-top:32px;">
-            <span>Comparison results</span>
+            <div class="seal-box">
+                <div class="seal-label">Avg confidence</div>
+                <div class="seal-value">{{ avg_prob }}%</div>
+            </div>
+            <div class="seal-box">
+                <div class="seal-label">Avg loan</div>
+                <div class="seal-value">{{ avg_loan }}k</div>
+            </div>
         </div>
-        <div class="compare-grid">
-            {% for s in results %}
-            <div class="compare-result-col {% if s.result == 'Approved' %}compare-approved{% else %}compare-rejected{% endif %}">
-                <div class="compare-result-label">{{ s.label }}</div>
-                <div class="compare-result-decision {% if s.result == 'Approved' %}approved{% else %}rejected{% endif %}">
-                    {{ s.result }}
-                </div>
-                <div class="ledger" style="margin-top:12px;">
-                    <div class="ledger-row"><span class="ledger-item">Confidence</span><span class="mono-cell" style="font-size:13px; color:var(--brass-light);">{{ s.probability }}%</span></div>
-                    <div class="ledger-row"><span class="ledger-item">Risk score</span><span class="mono-cell" style="font-size:13px;">{{ s.risk_score }}/100</span></div>
-                    <div class="ledger-row"><span class="ledger-item">Max loan</span><span class="mono-cell" style="font-size:13px; color:var(--brass-light);">{{ s.max_loan }}k</span></div>
-                    <div class="ledger-row"><span class="ledger-item">EMI</span><span class="mono-cell" style="font-size:13px;">{{ s.emi }}k/mo</span></div>
-                    <div class="ledger-row" style="border:none;"><span class="ledger-item">Credit</span><span class="mono-cell muted-cell" style="font-size:12px;">{{ s.credit }}</span></div>
-                </div>
-            </div>
-            {% endfor %}
+
+        <div class="ledger-section-head">
+            <span>Approval breakdown</span>
+            <span style="color:var(--ink-faint); text-transform:none; letter-spacing:normal; font-size:11px;">click a slice to filter</span>
         </div>
-        {% endif %}
+        <div class="chart-wrap ledger-chart-wrap">
+            <canvas id="pieChart" width="260" height="260"></canvas>
+        </div>
+
+        <div class="ledger-section-head" style="margin-top:24px;">
+            <span>30-day trend</span>
+        </div>
+        <div class="chart-wrap ledger-chart-wrap" style="padding:24px 16px;">
+            <canvas id="trendChart"></canvas>
+        </div>
+
+        <div class="ledger-section-head" style="margin-top:24px;">
+            <span>Feature weight</span>
+            <span style="color:var(--ink-faint); text-transform:none; letter-spacing:normal; font-size:11px;">hover for exact %</span>
+        </div>
+        <div class="chart-wrap ledger-chart-wrap" style="padding:24px 16px;">
+            <canvas id="fiChart"></canvas>
+        </div>
+
+        <div class="result-actions" style="margin-top:24px;">
+            {% if current_user.is_admin %}
+            <a href="/admin" class="btn btn-primary">Admin Panel</a>
+            {% else %}
+            <a href="/" class="btn btn-primary">New Application</a>
+            {% endif %}
+            <a href="/history" class="btn btn-ghost">View History</a>
+            <a href="/export-csv" class="btn btn-ghost">⬇ Export CSV</a>
+        </div>
     </div>
 </div>
 
 <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+<script>
+// Read live theme colors so charts adapt to dark/light mode
+const isLight   = document.documentElement.getAttribute('data-theme') === 'light';
+const textColor = isLight ? '#6B6458' : '#8A8576';
+const tickColor = isLight ? '#0B0E14' : '#F4F1E8';
+const gridColor = isLight ? 'rgba(11,14,20,0.06)' : 'rgba(244,241,232,0.04)';
+const brass     = '#B8902F';
+const brassLite = '#D4AF52';
+const ledgerGrn = '#4ADE94';
+const stampRed  = '#E8746B';
+
+const tooltipBase = {
+    backgroundColor: '#0B0E14',
+    titleColor: brass,
+    bodyColor: '#F4F1E8',
+    borderColor: 'rgba(184,144,47,0.3)',
+    borderWidth: 1,
+    padding: 12,
+    titleFont: { family: 'IBM Plex Mono', size: 11, weight: '600' },
+    bodyFont:  { family: 'DM Sans', size: 12 },
+    cornerRadius: 4,
+    displayColors: true
+};
+
+// ── Approval doughnut — click-to-filter ────────
+new Chart(document.getElementById('pieChart').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+        labels: ['Approved', 'Rejected'],
+        datasets: [{
+            data: [{{ approved }}, {{ rejected }}],
+            backgroundColor: [ledgerGrn + 'CC', stampRed + 'CC'],
+            hoverBackgroundColor: [ledgerGrn, stampRed],
+            borderColor: ['#0B0E14', '#0B0E14'],
+            borderWidth: 3,
+            hoverOffset: 8
+        }]
+    },
+    options: {
+        cutout: '70%',
+        onHover: (event, elements) => {
+            event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+        },
+        onClick: (event, elements) => {
+            if (elements.length) {
+                const label = elements[0].index === 0 ? 'Approved' : 'Rejected';
+                window.location.href = '/history?filter=' + label;
+            }
+        },
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: { color: textColor, font: { family: 'DM Sans', size: 13 }, padding: 20 }
+            },
+            tooltip: {
+                ...tooltipBase,
+                callbacks: { label: (ctx) => `${ctx.label}: ${ctx.parsed} applications` }
+            }
+        }
+    }
+});
+
+// ── Monthly trend line chart ───────────────────
+const trendDates    = {{ trend_dates | safe }};
+const trendApproved = {{ trend_approved | safe }};
+const trendRejected = {{ trend_rejected | safe }};
+
+new Chart(document.getElementById('trendChart').getContext('2d'), {
+    type: 'line',
+    data: {
+        labels: trendDates.length ? trendDates : ['No data yet'],
+        datasets: [
+            {
+                label: 'Approved',
+                data: trendApproved,
+                borderColor: ledgerGrn,
+                backgroundColor: 'rgba(74,222,148,0.07)',
+                borderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 7,
+                pointBackgroundColor: ledgerGrn,
+                pointBorderColor: '#0B0E14',
+                pointBorderWidth: 2,
+                fill: true,
+                tension: 0.4
+            },
+            {
+                label: 'Rejected',
+                data: trendRejected,
+                borderColor: stampRed,
+                backgroundColor: 'rgba(231,116,107,0.07)',
+                borderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 7,
+                pointBackgroundColor: stampRed,
+                pointBorderColor: '#0B0E14',
+                pointBorderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }
+        ]
+    },
+    options: {
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: { color: textColor, font: { family: 'DM Sans', size: 13 }, padding: 20 }
+            },
+            tooltip: { ...tooltipBase, callbacks: { title: (items) => `Date: ${items[0].label}` } }
+        },
+        scales: {
+            x: { ticks: { color: textColor, font: { size: 11 } }, grid: { color: gridColor } },
+            y: { ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor }, beginAtZero: true }
+        }
+    }
+});
+
+// ── Feature importance horizontal bar ──────────
+const fiLabels = {{ fi_labels | safe }};
+const fiValues = {{ fi_values | safe }};
+
+new Chart(document.getElementById('fiChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+        labels: fiLabels,
+        datasets: [{
+            label: 'Importance (%)',
+            data: fiValues,
+            backgroundColor: brass + 'B3',
+            hoverBackgroundColor: brassLite,
+            borderColor: brass,
+            borderWidth: 1,
+            borderRadius: 3
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        onHover: (event, elements) => {
+            event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+        },
+        plugins: {
+            legend: { display: false },
+            tooltip: { ...tooltipBase, callbacks: { label: (ctx) => `Importance: ${ctx.parsed.x}%` } }
+        },
+        scales: {
+            x: { ticks: { color: textColor }, grid: { color: gridColor } },
+            y: { ticks: { color: tickColor, font: { family: 'IBM Plex Mono', size: 11 } }, grid: { display: false } }
+        }
+    }
+});
+
+// ── Stat box click-to-filter ────────────────────
+document.getElementById('statApproved').addEventListener('click', () => {
+    window.location.href = '/history?filter=Approved';
+});
+document.getElementById('statRejected').addEventListener('click', () => {
+    window.location.href = '/history?filter=Rejected';
+});
+</script>
 </body>
 </html>

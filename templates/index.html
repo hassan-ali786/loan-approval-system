@@ -15,7 +15,8 @@
 </div>
 
 <nav class="navbar">
-    <div class="nav-logo">Loan<span>IQ</span></div>
+    <div class="navbar-inner">
+    <a href="/welcome" class="nav-logo">Loan<span>IQ</span></a>
     <div class="nav-links">
         {% if current_user.is_admin %}
         <a href="/admin">Admin Panel</a>
@@ -28,18 +29,19 @@
         <a href="/calculator">EMI Calc</a>
         <a href="/compare">Compare</a>
         {% endif %}
+        <a href="/profile">Profile</a>
         <a href="/change-password">Password</a>
         <a href="/logout">Logout</a>
         <button class="theme-btn" id="themeToggle">☀️</button>
+    </div>
     </div>
 </nav>
 
 <div class="container">
     <div class="card">
-        <div class="card-header">
-            <h1>Loan Eligibility Check</h1>
-            <p>Answer a few questions — get an instant decision</p>
-            <div class="gold-line"></div>
+        <div class="case-header">
+            <div class="case-ref">Applicant portal — {{ current_user.username }}</div>
+            <div class="case-title">Loan eligibility check</div>
         </div>
 
         {% if error %}
