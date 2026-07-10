@@ -1,225 +1,127 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LoanIQ — Admin Panel</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
+{% extends "base_admin.html" %}
+{% block title %}Admin Panel{% endblock %}
+{% block nav_admin %}active{% endblock %}
+{% block topbar_title %}<span>System Overview</span>{% endblock %}
+{% block topbar_actions %}
+<a href="/admin/export-users-csv" class="btn btn-ghost btn-sm">⬇ Export Users</a>
+<form method="POST" action="/admin/retrain" style="margin:0;"
+      onsubmit="return confirm('Retrain model? This may take a minute.');">
+    <button type="submit" class="btn btn-ghost btn-sm">⟳ Retrain Model</button>
+</form>
+{% endblock %}
+{% block content_class %}page-content-wide{% endblock %}
 
-<nav class="navbar">
-    <div class="navbar-inner">
-    <a href="/welcome" class="nav-logo">Loan<span>IQ</span></a>
-    <div class="nav-links">
-        <a href="/admin">Admin Panel</a>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/history">All History</a>
-        <a href="/admin/activity-log">Activity Log</a>
-        <a href="/change-password">Password</a>
+{% block content %}
+<div class="page-header">
+    <div class="page-header-eyebrow">Restricted — administrator only</div>
+    <div class="page-header-title">System Ledger</div>
+    <div class="page-header-sub">{{ total_filtered }} users shown</div>
+</div>
 
-        <!-- Bell icon with unread badge -->
-        <div class="bell-wrap">
-            <button class="bell-btn" id="bellBtn" onclick="toggleBell()">
-                🔔
-                {% if unread_count > 0 %}
-                <span class="bell-badge">{{ unread_count }}</span>
-                {% endif %}
-            </button>
-            <div class="bell-dropdown" id="bellDropdown">
-                <div class="bell-header">Notifications</div>
-                <div id="bellList"><div class="bell-empty">Loading...</div></div>
-            </div>
-        </div>
-
-        <a href="/logout">Logout</a>
-        <button class="theme-btn" id="themeToggle">☀️</button>
+<div class="metrics-grid">
+    <div class="metric-card">
+        <div class="metric-label">Total Users</div>
+        <div class="metric-value">{{ total_users }}</div>
     </div>
+    <div class="metric-card">
+        <div class="metric-label">Total Applications</div>
+        <div class="metric-value blue">{{ total_predictions }}</div>
     </div>
-</nav>
-
-<div class="container-wide">
-    <div class="card">
-
-        <div class="case-header">
-            <div class="case-ref">Restricted access — administrator only</div>
-            <div class="case-title">System ledger</div>
-        </div>
-
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}{% for m in messages %}
-            <div class="error-box" style="margin-bottom:14px;">{{ m }}</div>
-            {% endfor %}{% endif %}
-        {% endwith %}
-
-        <!-- Stats -->
-        <div class="seal-row admin-seal-row">
-            <div class="seal-box">
-                <div class="seal-label">Total users</div>
-                <div class="seal-value">{{ total_users }}</div>
-            </div>
-            <div class="seal-box">
-                <div class="seal-label">Applications</div>
-                <div class="seal-value">{{ total_predictions }}</div>
-            </div>
-            <div class="seal-box seal-credit">
-                <div class="seal-label">Approved</div>
-                <div class="seal-value">{{ approved }}</div>
-            </div>
-            <div class="seal-box seal-debit">
-                <div class="seal-label">Rejected</div>
-                <div class="seal-value">{{ rejected }}</div>
-            </div>
-            <div class="seal-box">
-                <div class="seal-label">Avg confidence</div>
-                <div class="seal-value">{{ avg_prob }}%</div>
-            </div>
-        </div>
-
-        <!-- Retrain button -->
-        <div style="margin: 20px 0 28px; display:flex; gap:10px; align-items:center;">
-            <form method="POST" action="/admin/retrain"
-                  onsubmit="return confirm('Retrain the model with current dataset? This may take a minute.');">
-                <button type="submit" class="btn btn-ghost" style="font-size:12px; padding:8px 16px;">
-                    ⟳ Retrain Model
-                </button>
-            </form>
-            <span style="font-size:11px; color:var(--ink-faint);">Runs RF / XGBoost / LightGBM cross-validation and reloads best model</span>
-        </div>
-
-        <!-- Search & Filter -->
-        <div class="ledger-section-head">
-            <span>User registry <span style="color:var(--ink-faint); font-weight:400;">({{ total_filtered }} shown)</span></span>
-            <a href="/admin/export-users-csv" class="ledger-export-link">⬇ Export ledger (CSV)</a>
-        </div>
-
-        <form method="GET" action="/admin" class="admin-search-row">
-            <input type="text" name="search" value="{{ search }}" placeholder="Search name or email…" class="admin-search-input">
-            <select name="status" class="admin-filter-select">
-                <option value="all"     {% if status == 'all'     %}selected{% endif %}>All users</option>
-                <option value="active"  {% if status == 'active'  %}selected{% endif %}>Active only</option>
-                <option value="blocked" {% if status == 'blocked' %}selected{% endif %}>Blocked only</option>
-            </select>
-            <button type="submit" class="ledger-btn" style="padding:8px 16px;">Filter</button>
-            {% if search or status != 'all' %}
-            <a href="/admin" class="ledger-btn" style="padding:8px 14px; text-decoration:none;">✕ Clear</a>
-            {% endif %}
-        </form>
-
-        <div class="table-wrap admin-table-wrap">
-            <table class="history-table admin-ledger-table">
-                <thead>
-                    <tr>
-                        <th>Ref</th>
-                        <th>Name</th>
-                        <th>Email on file</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Filings</th>
-                        <th>Registered</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                {% for u in users %}
-                <tr class="{% if u[4] %}row-blocked{% endif %}">
-                    <td class="mono-cell muted-cell">#{{ "%03d"|format(u[0]) }}</td>
-                    <td class="strong-cell">{{ u[1] }}</td>
-                    <td class="muted-cell small-cell">{{ u[2] }}</td>
-                    <td>
-                        {% if u[3] %}
-                        <span class="role-tag role-admin">★ Admin</span>
-                        {% else %}
-                        <span class="role-tag role-user">Applicant</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <span class="status-dot {% if u[4] %}status-blocked{% else %}status-active{% endif %}"></span>
-                        <span class="small-cell">{% if u[4] %}Blocked{% else %}Active{% endif %}</span>
-                    </td>
-                    <td class="mono-cell">{{ u[6] }}</td>
-                    <td class="muted-cell small-cell">{{ u[5] }}</td>
-                    <td>
-                        {% if not u[3] %}
-                        <div class="admin-action-row">
-                            <form method="POST" action="/admin/toggle-block/{{ u[0] }}" class="inline-form">
-                                <button type="submit" class="ledger-btn">
-                                    {% if u[4] %}Unblock{% else %}Block{% endif %}
-                                </button>
-                            </form>
-                            <form method="POST" action="/admin/delete/{{ u[0] }}" class="inline-form"
-                                  onsubmit="return confirm('Delete this user and all their predictions?');">
-                                <button type="submit" class="ledger-btn ledger-btn-danger">Delete</button>
-                            </form>
-                        </div>
-                        {% else %}
-                        <span class="muted-cell small-cell">Protected</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-                {% if not users %}
-                <tr><td colspan="8" style="text-align:center; color:var(--ink-muted); padding:24px;">No users match your search.</td></tr>
-                {% endif %}
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Pagination -->
-        {% if total_pages > 1 %}
-        <div class="pagination-row">
-            {% if page > 1 %}
-            <a href="/admin?page={{ page-1 }}&search={{ search }}&status={{ status }}" class="ledger-btn page-btn">← Prev</a>
-            {% endif %}
-            <span class="mono-cell muted-cell">Page {{ page }} of {{ total_pages }}</span>
-            {% if page < total_pages %}
-            <a href="/admin?page={{ page+1 }}&search={{ search }}&status={{ status }}" class="ledger-btn page-btn">Next →</a>
-            {% endif %}
-        </div>
-        {% endif %}
-
-        <div class="result-actions" style="margin-top:24px;">
-            <a href="/dashboard" class="btn btn-primary">System Dashboard</a>
-            <a href="/history" class="btn btn-ghost">All History</a>
-        </div>
+    <div class="metric-card green-accent">
+        <div class="metric-label">Approved</div>
+        <div class="metric-value green">{{ approved }}</div>
+    </div>
+    <div class="metric-card red-accent">
+        <div class="metric-label">Rejected</div>
+        <div class="metric-value red">{{ rejected }}</div>
+    </div>
+    <div class="metric-card gold-accent">
+        <div class="metric-label">Avg Confidence</div>
+        <div class="metric-value gold">{{ avg_prob }}%</div>
     </div>
 </div>
 
-<script src="{{ url_for('static', filename='js/theme.js') }}"></script>
-<script>
-function toggleBell() {
-    const dropdown = document.getElementById('bellDropdown');
-    const isOpen   = dropdown.classList.contains('open');
-    dropdown.classList.toggle('open');
+<div class="section-label">User Registry</div>
 
-    if (!isOpen) {
-        fetch('/admin/notifications')
-            .then(r => r.json())
-            .then(data => {
-                const list = document.getElementById('bellList');
-                if (!data.length) {
-                    list.innerHTML = '<div class="bell-empty">No notifications yet.</div>';
-                    return;
-                }
-                list.innerHTML = data.map(n => `
-                    <div class="bell-item ${n.is_read ? '' : 'bell-unread'}">
-                        <span class="bell-msg">${n.message}</span>
-                        <span class="bell-time">${n.created_at}</span>
-                    </div>
-                `).join('');
-                // Clear badge
-                const badge = document.querySelector('.bell-badge');
-                if (badge) badge.remove();
-            });
-    }
-}
+<form method="GET" action="/admin" class="admin-search-row">
+    <input type="text" name="search" value="{{ search }}" placeholder="Search name or email…" class="admin-search-input">
+    <select name="status" class="admin-filter-select">
+        <option value="all"     {% if status == 'all'     %}selected{% endif %}>All users</option>
+        <option value="active"  {% if status == 'active'  %}selected{% endif %}>Active only</option>
+        <option value="blocked" {% if status == 'blocked' %}selected{% endif %}>Blocked only</option>
+    </select>
+    <button type="submit" class="ledger-btn" style="padding:8px 16px;">Filter</button>
+    {% if search or status != 'all' %}
+    <a href="/admin" class="ledger-btn" style="padding:8px 12px; text-decoration:none;">✕ Clear</a>
+    {% endif %}
+</form>
 
-// Close bell if clicking outside
-document.addEventListener('click', e => {
-    if (!e.target.closest('.bell-wrap')) {
-        document.getElementById('bellDropdown').classList.remove('open');
-    }
-});
-</script>
-</body>
-</html>
+<div class="table-wrap">
+    <table class="history-table">
+        <thead>
+            <tr>
+                <th>Ref</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Apps</th>
+                <th>Joined</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for u in users %}
+        <tr class="{% if u[4] %}row-blocked{% endif %}">
+            <td class="mono-cell muted-cell">#{{ "%03d"|format(u[0]) }}</td>
+            <td class="strong-cell">{{ u[1] }}</td>
+            <td class="muted-cell small-cell">{{ u[2] }}</td>
+            <td>
+                {% if u[3] %}
+                <span class="role-tag role-admin">★ Admin</span>
+                {% else %}
+                <span class="role-tag role-user">User</span>
+                {% endif %}
+            </td>
+            <td>
+                <span class="status-dot {% if u[4] %}status-blocked{% else %}status-active{% endif %}"></span>
+                <span class="small-cell">{% if u[4] %}Blocked{% else %}Active{% endif %}</span>
+            </td>
+            <td class="mono-cell">{{ u[6] }}</td>
+            <td class="muted-cell small-cell">{{ u[5] }}</td>
+            <td>
+                {% if not u[3] %}
+                <div class="admin-action-row">
+                    <form method="POST" action="/admin/toggle-block/{{ u[0] }}" class="inline-form">
+                        <button type="submit" class="ledger-btn">{% if u[4] %}Unblock{% else %}Block{% endif %}</button>
+                    </form>
+                    <form method="POST" action="/admin/delete/{{ u[0] }}" class="inline-form"
+                          onsubmit="return confirm('Delete this user and all their data?');">
+                        <button type="submit" class="ledger-btn ledger-btn-danger">Delete</button>
+                    </form>
+                </div>
+                {% else %}
+                <span class="muted-cell small-cell">Protected</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        {% if not users %}
+        <tr><td colspan="8" style="text-align:center; color:var(--text-3); padding:24px;">No users match your search.</td></tr>
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+
+{% if total_pages > 1 %}
+<div class="pagination-row">
+    {% if page > 1 %}
+    <a href="/admin?page={{ page-1 }}&search={{ search }}&status={{ status }}" class="ledger-btn page-btn">← Prev</a>
+    {% endif %}
+    <span class="mono-cell muted-cell">Page {{ page }} of {{ total_pages }}</span>
+    {% if page < total_pages %}
+    <a href="/admin?page={{ page+1 }}&search={{ search }}&status={{ status }}" class="ledger-btn page-btn">Next →</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
