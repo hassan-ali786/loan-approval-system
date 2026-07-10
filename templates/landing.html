@@ -1,133 +1,145 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LoanIQ — Explainable Loan Decisions</title>
+<title>LoanIQ — AI-Powered Loan Decisions</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
 </head>
 <body class="landing-body">
 
-<nav class="navbar landing-nav">
-    <div class="navbar-inner">
-    <a href="/welcome" class="nav-logo">Loan<span>IQ</span></a>
-    <div class="nav-links">
-        <a href="/login">Sign In</a>
-        <a href="/signup" class="btn btn-primary" style="padding:8px 18px;">Get Started</a>
-        <button class="theme-btn" id="themeToggle">☀️</button>
-    </div>
+<nav class="landing-nav">
+    <div class="landing-nav-inner">
+        <a href="/welcome" class="auth-brand" style="margin-bottom:0;">
+            <div class="auth-logo" style="width:32px;height:32px;font-size:14px;">LQ</div>
+            <span class="auth-name">Loan<span>IQ</span></span>
+        </a>
+        <div style="display:flex; align-items:center; gap:16px;">
+            <a href="/login" style="color:var(--text-2); text-decoration:none; font-size:14px; font-weight:500;">Sign In</a>
+            <a href="/signup" class="btn btn-primary btn-sm">Get Started →</a>
+            <button class="theme-btn" id="themeToggle" style="padding:6px 10px;">☀</button>
+        </div>
     </div>
 </nav>
 
-<!-- HERO -->
-<section class="hero">
-    <div class="hero-text">
-        <div class="hero-eyebrow">Explainable AI · Instant Decisions</div>
-        <h1 class="hero-title">Every loan decision,<br><span class="hero-gold">explained.</span></h1>
-        <p class="hero-sub">
-            LoanIQ doesn't just say yes or no — it shows you exactly which factors moved the needle,
-            backed by SHAP explainability and a model that's cross-validated to pick the best fit.
+<section class="l-hero">
+    <div class="l-hero-text">
+        <div class="l-eyebrow">Explainable AI · Instant Decisions · SHAP + LIME</div>
+        <h1 class="l-title">Every loan decision,<br><em>explained.</em></h1>
+        <p class="l-sub">
+            LoanIQ doesn't just say yes or no — it shows you exactly which factors
+            moved the needle, backed by SHAP and LIME explainability with a model
+            that auto-selects the best fit across Random Forest, XGBoost, and LightGBM.
         </p>
-        <div class="hero-actions">
-            <a href="/signup" class="btn btn-submit">Check Your Eligibility →</a>
-            <a href="/login" class="btn btn-ghost">I have an account</a>
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <a href="/signup" class="btn btn-primary">Check Your Eligibility →</a>
+            <a href="/login" class="btn btn-ghost">Sign In</a>
         </div>
     </div>
 
-    <!-- SIGNATURE ELEMENT: live mini SHAP demo -->
-    <div class="hero-demo">
-        <div class="demo-card">
-            <div class="demo-label">Live Decision Preview</div>
-            <div class="demo-decision" id="demoDecision">Approved</div>
-            <div class="demo-confidence-wrap">
-                <div class="demo-confidence-bar-wrap">
-                    <div class="demo-confidence-bar" id="demoBar" style="width:87%"></div>
-                </div>
-                <span class="demo-confidence-pct" id="demoPct">87%</span>
+    <div class="l-demo-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-3); text-transform:uppercase; letter-spacing:0.1em;">Live Preview</span>
+            <span class="badge badge-green" id="demoBadge">✓ Approved</span>
+        </div>
+
+        <div style="font-size:40px; font-weight:700; font-family:'JetBrains Mono',monospace; margin-bottom:4px;" id="demoScore">87%</div>
+        <div style="font-size:11px; color:var(--text-3); margin-bottom:16px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:0.07em;">confidence score</div>
+
+        <div style="background:var(--bg-base); border-radius:4px; height:4px; overflow:hidden; margin-bottom:20px;">
+            <div id="demoBar" style="height:100%; background:var(--gold); border-radius:4px; width:87%; transition: width 0.9s ease;"></div>
+        </div>
+
+        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-3); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:8px;">SHAP factors</div>
+        <div id="demoFactors">
+            <div style="display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--border);">
+                <span style="font-size:11px; color:var(--text-2); font-family:'JetBrains Mono',monospace;">Credit_History</span>
+                <span style="font-size:11px; color:var(--green); font-weight:600;">+0.42</span>
             </div>
-            <div class="demo-factors" id="demoFactors">
-                <div class="demo-factor">
-                    <span>Credit_History</span>
-                    <div class="demo-factor-bar-wrap"><div class="demo-factor-bar pos" style="width:92%"></div></div>
-                </div>
-                <div class="demo-factor">
-                    <span>TotalIncome</span>
-                    <div class="demo-factor-bar-wrap"><div class="demo-factor-bar pos" style="width:64%"></div></div>
-                </div>
-                <div class="demo-factor">
-                    <span>LoanIncomeRatio</span>
-                    <div class="demo-factor-bar-wrap"><div class="demo-factor-bar neg" style="width:38%"></div></div>
-                </div>
+            <div style="display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--border);">
+                <span style="font-size:11px; color:var(--text-2); font-family:'JetBrains Mono',monospace;">TotalIncome</span>
+                <span style="font-size:11px; color:var(--green); font-weight:600;">+0.28</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:7px 0;">
+                <span style="font-size:11px; color:var(--text-2); font-family:'JetBrains Mono',monospace;">LoanIncomeRatio</span>
+                <span style="font-size:11px; color:var(--red); font-weight:600;">−0.15</span>
             </div>
         </div>
     </div>
 </section>
 
-<!-- FEATURES -->
-<section class="features">
-    <div class="feature-row">
-        <div class="feature-card">
-            <div class="feature-icon">◈</div>
-            <h3>SHAP Explainability</h3>
-            <p>See the top 5 factors behind every decision — not a black box, a reasoned answer.</p>
+<section class="l-features">
+    <div class="l-features-grid">
+        <div class="l-feature-card">
+            <div class="l-feature-icon">◈</div>
+            <div class="l-feature-title">SHAP + LIME</div>
+            <div class="l-feature-desc">Two independent explainability methods show exactly why your loan was approved or rejected — not a black box.</div>
         </div>
-        <div class="feature-card">
-            <div class="feature-icon">◎</div>
-            <h3>Best-Fit Model</h3>
-            <p>Random Forest, XGBoost, and LightGBM are cross-validated — the strongest one wins.</p>
+        <div class="l-feature-card">
+            <div class="l-feature-icon">◎</div>
+            <div class="l-feature-title">Best-Fit Model</div>
+            <div class="l-feature-desc">RF, XGBoost, and LightGBM compete via 5-fold cross-validation — the winner is selected automatically.</div>
         </div>
-        <div class="feature-card">
-            <div class="feature-icon">▣</div>
-            <h3>Risk Score & EMI</h3>
-            <p>A 0–100 risk score, a suggested max loan, and a full EMI breakdown — all in one place.</p>
+        <div class="l-feature-card">
+            <div class="l-feature-icon">▦</div>
+            <div class="l-feature-title">Full Admin Panel</div>
+            <div class="l-feature-desc">Block users, view activity logs, export data, retrain the model — all from a dedicated admin interface.</div>
+        </div>
+        <div class="l-feature-card">
+            <div class="l-feature-icon">▣</div>
+            <div class="l-feature-title">Risk Score & EMI</div>
+            <div class="l-feature-desc">Get a 0–100 risk score, a suggested max loan ceiling, and a full EMI breakdown with charts.</div>
+        </div>
+        <div class="l-feature-card">
+            <div class="l-feature-icon">◉</div>
+            <div class="l-feature-title">PDF Reports</div>
+            <div class="l-feature-desc">Download a formatted underwriting report with your decision, SHAP factors, and application details.</div>
+        </div>
+        <div class="l-feature-card">
+            <div class="l-feature-icon">◑</div>
+            <div class="l-feature-title">Scenario Compare</div>
+            <div class="l-feature-desc">Compare 3 loan scenarios side by side to find the best combination of income, amount, and terms.</div>
         </div>
     </div>
 </section>
 
-<!-- CTA -->
-<section class="cta-section">
-    <h2>Ready to see your number?</h2>
-    <p>Create a free account and get an explained decision in under a minute.</p>
-    <a href="/signup" class="btn btn-submit" style="margin-top:16px;">Get Started Free</a>
+<section class="l-cta">
+    <div class="l-cta-inner">
+        <h2 class="l-cta-title">Ready to see your decision?</h2>
+        <p style="color:var(--text-2); font-size:15px; margin-bottom:24px;">Create a free account and get an explained result in under a minute.</p>
+        <a href="/signup" class="btn btn-primary" style="padding:13px 28px; font-size:15px;">Get Started Free →</a>
+    </div>
 </section>
 
-<footer class="landing-footer">
-    <span>LoanIQ — Built by Hassan Ali</span>
+<footer class="l-footer">
+    <span>LoanIQ — Built by <strong>Hassan Ali</strong> · Data Scientist & ML Engineer</span>
 </footer>
 
 <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 <script>
-// Subtle ambient demo animation — cycles between two example outcomes
 const outcomes = [
-    { decision: "Approved", color: "approved", pct: 87,
-      factors: [["Credit_History", 92, "pos"], ["TotalIncome", 64, "pos"], ["LoanIncomeRatio", 38, "neg"]] },
-    { decision: "Rejected", color: "rejected", pct: 73,
-      factors: [["Credit_History", 81, "neg"], ["LoanIncomeRatio", 55, "neg"], ["EMI", 40, "neg"]] }
+    { badge: 'badge-green', badgeText: '✓ Approved', score: '87%', barW: '87%',
+      factors: [['Credit_History', '+0.42', 'green'], ['TotalIncome', '+0.28', 'green'], ['LoanIncomeRatio', '−0.15', 'red']] },
+    { badge: 'badge-red',   badgeText: '✕ Rejected', score: '73%', barW: '73%',
+      factors: [['Credit_History', '−0.51', 'red'], ['LoanIncomeRatio', '−0.32', 'red'], ['EMI', '−0.18', 'red']] }
 ];
 let idx = 0;
-
 function cycleDemo() {
     idx = (idx + 1) % outcomes.length;
     const o = outcomes[idx];
-    const decisionEl = document.getElementById('demoDecision');
-    const barEl       = document.getElementById('demoBar');
-    const pctEl        = document.getElementById('demoPct');
-    const factorsEl   = document.getElementById('demoFactors');
-
-    decisionEl.textContent = o.decision;
-    decisionEl.className   = 'demo-decision ' + o.color;
-    barEl.style.width      = o.pct + '%';
-    pctEl.textContent      = o.pct + '%';
-
-    factorsEl.innerHTML = o.factors.map(([name, val, dir]) => `
-        <div class="demo-factor">
-            <span>${name}</span>
-            <div class="demo-factor-bar-wrap"><div class="demo-factor-bar ${dir}" style="width:${val}%"></div></div>
-        </div>
-    `).join('');
+    const badge = document.getElementById('demoBadge');
+    badge.className = 'badge ' + o.badge;
+    badge.textContent = o.badgeText;
+    document.getElementById('demoScore').textContent = o.score;
+    document.getElementById('demoBar').style.width = o.barW;
+    document.getElementById('demoFactors').innerHTML = o.factors.map(([name, val, color]) =>
+        `<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);">
+            <span style="font-size:11px;color:var(--text-2);font-family:'JetBrains Mono',monospace;">${name}</span>
+            <span style="font-size:11px;color:var(--${color});font-weight:600;">${val}</span>
+        </div>`
+    ).join('');
 }
-
 setInterval(cycleDemo, 4000);
 </script>
 </body>
