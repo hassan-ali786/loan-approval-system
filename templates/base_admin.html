@@ -19,26 +19,26 @@
             <div class="sidebar-section">
                 <div class="sidebar-section-label">Admin</div>
                 <a href="/admin" class="sidebar-link {% block nav_admin %}{% endblock %}">
-                    <span class="sidebar-link-icon">🛡️</span> Panel
+                    Panel
                 </a>
                 <a href="/dashboard" class="sidebar-link {% block nav_dashboard %}{% endblock %}">
-                    <span class="sidebar-link-icon">📊</span> Dashboard
+                    Dashboard
                 </a>
                 <a href="/history" class="sidebar-link {% block nav_history %}{% endblock %}">
-                    <span class="sidebar-link-icon">🗂️</span> All History
+                    All History
                 </a>
                 <a href="/admin/activity-log" class="sidebar-link {% block nav_activity %}{% endblock %}">
-                    <span class="sidebar-link-icon">📜</span> Activity Log
+                    Activity Log
                 </a>
             </div>
 
             <div class="sidebar-section">
                 <div class="sidebar-section-label">Account</div>
                 <a href="/change-password" class="sidebar-link {% block nav_password %}{% endblock %}">
-                    <span class="sidebar-link-icon">🔑</span> Password
+                    Password
                 </a>
                 <a href="/logout" class="sidebar-link" style="color:var(--red);">
-                    <span class="sidebar-link-icon">🚪</span> Sign Out
+                    Sign Out
                 </a>
             </div>
         </nav>
@@ -52,7 +52,7 @@
                 </div>
                 <div class="bell-wrap" style="margin-right:4px;">
                     <button class="bell-btn" id="bellBtn" onclick="toggleBell()">
-                        🔔
+                        
                         {% if unread_count > 0 %}
                         <span class="bell-badge">{{ unread_count }}</span>
                         {% endif %}
@@ -62,14 +62,14 @@
                         <div id="bellList"><div class="bell-empty">Loading...</div></div>
                     </div>
                 </div>
-                <button class="theme-btn" id="themeToggle" style="padding:4px 6px; font-size:12px;">☀</button>
+                <button class="theme-btn" id="themeToggle" style="padding:4px 6px; font-size:12px;">Theme</button>
             </div>
         </div>
     </aside>
 
     <div class="main">
         <div class="topbar">
-            <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+            <button class="sidebar-toggle" id="sidebarToggle">≡</button>
             <div class="topbar-title">{% block topbar_title %}{% endblock %}</div>
             <div class="topbar-actions">{% block topbar_actions %}{% endblock %}</div>
         </div>

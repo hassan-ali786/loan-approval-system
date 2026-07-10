@@ -4,13 +4,13 @@ document.documentElement.setAttribute('data-theme', saved);
 
 const themeBtn = document.getElementById('themeToggle');
 if (themeBtn) {
-    themeBtn.textContent = saved === 'dark' ? '☀' : '🌙';
+    themeBtn.textContent = saved === 'dark' ? 'Light' : 'Dark';
     themeBtn.addEventListener('click', () => {
         const current = document.documentElement.getAttribute('data-theme');
         const next    = current === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', next);
         localStorage.setItem('loaniq-theme', next);
-        themeBtn.textContent = next === 'dark' ? '☀' : '🌙';
+        themeBtn.textContent = next === 'dark' ? 'Light' : 'Dark';
     });
 }
 

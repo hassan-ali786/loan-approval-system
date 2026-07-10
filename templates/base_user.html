@@ -20,36 +20,36 @@
             <div class="sidebar-section">
                 <div class="sidebar-section-label">Main</div>
                 <a href="/" class="sidebar-link {% block nav_apply %}{% endblock %}">
-                    <span class="sidebar-link-icon">📋</span> Apply
+                    Apply
                 </a>
                 <a href="/compare" class="sidebar-link {% block nav_compare %}{% endblock %}">
-                    <span class="sidebar-link-icon">⚖️</span> Compare
+                    Compare
                 </a>
                 <a href="/calculator" class="sidebar-link {% block nav_calc %}{% endblock %}">
-                    <span class="sidebar-link-icon">🧮</span> EMI Calc
+                    EMI Calc
                 </a>
             </div>
 
             <div class="sidebar-section">
                 <div class="sidebar-section-label">Records</div>
                 <a href="/history" class="sidebar-link {% block nav_history %}{% endblock %}">
-                    <span class="sidebar-link-icon">🗂️</span> History
+                    History
                 </a>
                 <a href="/dashboard" class="sidebar-link {% block nav_dashboard %}{% endblock %}">
-                    <span class="sidebar-link-icon">📊</span> Dashboard
+                    Dashboard
                 </a>
             </div>
 
             <div class="sidebar-section">
                 <div class="sidebar-section-label">Account</div>
                 <a href="/profile" class="sidebar-link {% block nav_profile %}{% endblock %}">
-                    <span class="sidebar-link-icon">👤</span> Profile
+                    Profile
                 </a>
                 <a href="/change-password" class="sidebar-link {% block nav_password %}{% endblock %}">
-                    <span class="sidebar-link-icon">🔑</span> Password
+                    Password
                 </a>
                 <a href="/logout" class="sidebar-link" style="color:var(--red);">
-                    <span class="sidebar-link-icon">🚪</span> Sign Out
+                    Sign Out
                 </a>
             </div>
         </nav>
@@ -61,7 +61,7 @@
                     <div class="sidebar-username">{{ current_user.username }}</div>
                     <div class="sidebar-role">Applicant</div>
                 </div>
-                <button class="theme-btn" id="themeToggle" style="padding:4px 6px; font-size:12px;">☀</button>
+                <button class="theme-btn" id="themeToggle" style="padding:4px 6px; font-size:12px;">Theme</button>
             </div>
         </div>
     </aside>
@@ -69,7 +69,7 @@
     <!-- Main -->
     <div class="main">
         <div class="topbar">
-            <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+            <button class="sidebar-toggle" id="sidebarToggle">≡</button>
             <div class="topbar-title">{% block topbar_title %}{% endblock %}</div>
             <div class="topbar-actions">{% block topbar_actions %}{% endblock %}</div>
         </div>
