@@ -1,283 +1,191 @@
 /* ============================================
-   LOANIQ — LANDING PAGE
-   Premium hero with animated gradient mesh
+   LOANIQ — LANDING PAGE CSS
    ============================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,300;9..144,1,300;9..144,0,500&display=swap');
-
 .landing-body {
+    display: block !important;
     padding: 0 !important;
-    align-items: stretch !important;
-    background: #070A0F !important;
+    background: var(--bg-base) !important;
     background-image:
-        radial-gradient(ellipse 120% 80% at 10% -20%, rgba(184,144,47,0.08) 0%, transparent 55%),
-        radial-gradient(ellipse 80% 60% at 90% 110%, rgba(74,222,148,0.05) 0%, transparent 50%),
-        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(11,14,20,0) 0%, transparent 100%) !important;
+        radial-gradient(ellipse 100% 60% at 10% -10%, rgba(240,180,41,0.07) 0%, transparent 55%),
+        radial-gradient(ellipse 70% 50% at 90% 110%, rgba(52,211,153,0.04) 0%, transparent 50%) !important;
 }
 
-/* ========================
-   LANDING NAV
-   ======================== */
+/* Nav */
 .landing-nav {
-    max-width: 1100px;
     position: sticky;
-    top: 12px;
+    top: 0;
     z-index: 100;
+    background: rgba(10,12,16,0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
 }
-.landing-nav .navbar-inner {
+.landing-nav-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 14px 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
 
-/* ========================
-   HERO
-   ======================== */
-.hero {
+/* Hero */
+.l-hero {
     max-width: 1100px;
     margin: 0 auto;
-    padding: 80px 24px 100px;
+    padding: 90px 24px 100px;
     display: grid;
     grid-template-columns: 1.1fr 1fr;
-    gap: 72px;
+    gap: 80px;
     align-items: center;
 }
-
-.hero-eyebrow {
-    font-family: 'IBM Plex Mono', monospace;
+.l-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
-    color: var(--brass);
-    letter-spacing: 0.12em;
+    color: var(--gold-dim);
     text-transform: uppercase;
+    letter-spacing: 0.1em;
     margin-bottom: 20px;
     display: flex;
     align-items: center;
     gap: 10px;
 }
-.hero-eyebrow::before {
+.l-eyebrow::before {
     content: '';
     display: inline-block;
-    width: 28px; height: 1px;
-    background: var(--brass);
+    width: 24px; height: 1px;
+    background: var(--gold-dim);
+    flex-shrink: 0;
 }
-
-.hero-title {
-    font-family: 'Fraunces', serif;
-    font-weight: 300;
-    font-size: 58px;
+.l-title {
+    font-size: 56px;
+    font-weight: 800;
+    color: var(--text-1);
+    letter-spacing: -0.03em;
     line-height: 1.05;
-    letter-spacing: -0.02em;
-    color: var(--text-primary);
-    margin-bottom: 24px;
+    margin-bottom: 22px;
 }
-.hero-gold {
-    color: var(--brass-light);
+.l-title em {
+    color: var(--gold-text);
     font-style: italic;
-    font-weight: 400;
+    font-weight: 700;
 }
-
-.hero-sub {
+.l-sub {
     font-size: 16px;
-    color: var(--text-secondary);
+    color: var(--text-2);
     line-height: 1.75;
     max-width: 440px;
     margin-bottom: 36px;
 }
 
-.hero-actions {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-
-/* ========================
-   SIGNATURE DEMO CARD
-   ======================== */
-.hero-demo { display: flex; justify-content: center; }
-
-.demo-card {
-    background: var(--card-bg);
-    border: 1px solid var(--card-border);
-    border-radius: var(--radius-lg);
+/* Demo card */
+.l-demo-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-md);
+    border-radius: var(--radius-xl);
     padding: 28px;
-    width: 100%;
-    max-width: 340px;
-    box-shadow: var(--shadow-lg),
-                0 0 0 1px rgba(255,255,255,0.03) inset;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03) inset;
     position: relative;
     overflow: hidden;
 }
-.demo-card::before {
+.l-demo-card::before {
     content: '';
     position: absolute;
-    top: 0; left: 0; right: 0; height: 1px;
-    background: linear-gradient(90deg, transparent, var(--brass-dim), transparent);
+    top: 0; left: 25%; right: 25%; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(240,180,41,0.4), transparent);
 }
 
-.demo-label {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    color: var(--text-faint);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 16px;
-}
-.demo-decision {
-    font-family: 'Fraunces', serif;
-    font-size: 34px;
-    font-weight: 400;
-    margin-bottom: 18px;
-    transition: color 0.5s ease;
-}
-.demo-decision.approved { color: var(--ledger-text); }
-.demo-decision.rejected { color: var(--stamp-text); }
-
-.demo-confidence-wrap { margin-bottom: 24px; }
-.demo-confidence-bar-wrap {
-    background: var(--paper-line);
-    border-radius: 3px;
-    height: 4px;
-    overflow: hidden;
-    margin-bottom: 6px;
-}
-.demo-confidence-bar {
-    height: 100%;
-    background: linear-gradient(90deg, var(--brass), var(--brass-light));
-    border-radius: 3px;
-    box-shadow: 0 0 6px var(--brass-glow);
-    transition: width 0.9s cubic-bezier(0.4,0,0.2,1);
-}
-.demo-confidence-pct {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
-    color: var(--brass-light);
-}
-
-.demo-factors { display: flex; flex-direction: column; gap: 10px; }
-.demo-factor {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    color: var(--text-primary);
-}
-.demo-factor span:first-child {
-    width: 120px;
-    flex-shrink: 0;
-    color: var(--text-secondary);
-}
-.demo-factor-bar-wrap {
-    flex: 1;
-    background: var(--paper-line);
-    border-radius: 3px;
-    height: 4px;
-    overflow: hidden;
-}
-.demo-factor-bar {
-    height: 100%;
-    border-radius: 3px;
-    transition: width 0.9s ease;
-}
-.demo-factor-bar.pos { background: var(--ledger-text); }
-.demo-factor-bar.neg { background: var(--stamp-text); }
-
-/* ========================
-   FEATURES
-   ======================== */
-.features {
+/* Features */
+.l-features {
     max-width: 1100px;
     margin: 0 auto;
     padding: 20px 24px 100px;
 }
-.feature-row {
+.l-features-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+    gap: 16px;
 }
-.feature-card {
-    background: var(--card-bg);
-    border: 1px solid var(--card-border);
-    border-radius: var(--radius-md);
-    padding: 28px;
+.l-feature-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 26px;
+    transition: border-color 0.15s, transform 0.15s;
     position: relative;
     overflow: hidden;
-    transition: border-color var(--transition), transform var(--transition);
 }
-.feature-card::before {
+.l-feature-card::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0; height: 1px;
-    background: linear-gradient(90deg, transparent, var(--brass-dim), transparent);
+    background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
     opacity: 0;
-    transition: opacity var(--transition);
+    transition: opacity 0.15s;
 }
-.feature-card:hover { border-color: var(--brass-dim); transform: translateY(-3px); }
-.feature-card:hover::before { opacity: 1; }
-
-.feature-icon {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 20px;
-    color: var(--brass);
-    margin-bottom: 16px;
+.l-feature-card:hover {
+    border-color: var(--border-md);
+    transform: translateY(-3px);
 }
-.feature-card h3 {
-    font-family: 'Fraunces', serif;
-    font-size: 18px;
-    font-weight: 400;
-    color: var(--text-primary);
+.l-feature-card:hover::before { opacity: 1; }
+.l-feature-icon {
+    font-size: 22px;
+    color: var(--gold);
+    margin-bottom: 14px;
+    font-family: 'JetBrains Mono', monospace;
+}
+.l-feature-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-1);
+    letter-spacing: -0.01em;
     margin-bottom: 8px;
 }
-.feature-card p {
+.l-feature-desc {
     font-size: 13px;
-    color: var(--text-secondary);
+    color: var(--text-2);
     line-height: 1.65;
 }
 
-/* ========================
-   CTA
-   ======================== */
-.cta-section {
+/* CTA */
+.l-cta {
+    border-top: 1px solid var(--border);
+    background: radial-gradient(ellipse 80% 100% at 50% 0%, rgba(240,180,41,0.04) 0%, transparent 70%);
+}
+.l-cta-inner {
     max-width: 560px;
     margin: 0 auto;
     text-align: center;
-    padding: 40px 24px 100px;
+    padding: 80px 24px;
 }
-.cta-section h2 {
-    font-family: 'Fraunces', serif;
-    font-size: 34px;
-    font-weight: 300;
-    color: var(--text-primary);
+.l-cta-title {
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--text-1);
+    letter-spacing: -0.02em;
     margin-bottom: 12px;
-    letter-spacing: -0.01em;
 }
-.cta-section p { color: var(--text-secondary); font-size: 15px; line-height: 1.6; }
-.cta-section .btn { margin-top: 20px; }
 
-/* ========================
-   FOOTER
-   ======================== */
-.landing-footer {
+/* Footer */
+.l-footer {
+    border-top: 1px solid var(--border);
     text-align: center;
     padding: 24px;
-    border-top: 1px solid var(--card-border);
-    color: var(--text-faint);
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
+    color: var(--text-3);
     letter-spacing: 0.04em;
-    max-width: 1100px;
-    width: 100%;
-    margin: 0 auto;
 }
 
-/* ========================
-   RESPONSIVE
-   ======================== */
+/* Responsive */
 @media (max-width: 900px) {
-    .hero { grid-template-columns: 1fr; padding: 50px 20px 70px; gap: 48px; }
-    .hero-title { font-size: 42px; }
-    .hero-demo { order: -1; }
-    .feature-row { grid-template-columns: 1fr; }
-    .hero-actions { flex-direction: column; }
-    .hero-actions .btn { width: 100%; justify-content: center; }
+    .l-hero { grid-template-columns: 1fr; padding: 60px 20px 80px; gap: 48px; }
+    .l-title { font-size: 40px; }
+    .l-demo-card { order: -1; }
+    .l-features-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 600px) {
+    .l-title { font-size: 32px; }
+    .l-features-grid { grid-template-columns: 1fr; }
 }
