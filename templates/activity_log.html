@@ -1,78 +1,43 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LoanIQ — Activity Log</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
+{% extends "base_admin.html" %}
+{% block title %}Activity Log{% endblock %}
+{% block nav_activity %}active{% endblock %}
+{% block topbar_title %}<span>Activity Log</span>{% endblock %}
+{% block content_class %}page-content-wide{% endblock %}
 
-<nav class="navbar">
-    <div class="navbar-inner">
-    <a href="/welcome" class="nav-logo">Loan<span>IQ</span></a>
-    <div class="nav-links">
-        <a href="/admin">Admin Panel</a>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/history">All History</a>
-        <a href="/admin/activity-log" style="color:var(--brass-light);">Activity Log</a>
-        <a href="/change-password">Password</a>
-        <a href="/logout">Logout</a>
-        <button class="theme-btn" id="themeToggle">☀️</button>
-    </div>
-    </div>
-</nav>
-
-<div class="container-wide">
-    <div class="card">
-        <div class="case-header">
-            <div class="case-ref">System audit — administrator only</div>
-            <div class="case-title">Activity log</div>
-        </div>
-
-        <div class="table-wrap admin-table-wrap">
-            <table class="history-table admin-ledger-table">
-                <thead>
-                    <tr>
-                        <th>Ref</th>
-                        <th>User</th>
-                        <th>Action</th>
-                        <th>Detail</th>
-                        <th>IP Address</th>
-                        <th>Timestamp</th>
-                    </tr>
-                </thead>
-                <tbody>
-                {% for log in logs %}
-                <tr>
-                    <td class="mono-cell muted-cell">#{{ "%04d"|format(log[0]) }}</td>
-                    <td class="strong-cell">{{ log[1] or "—" }}</td>
-                    <td>
-                        <span class="activity-tag activity-{{ log[2] }}">{{ log[2] }}</span>
-                    </td>
-                    <td class="muted-cell small-cell">{{ log[3] or "—" }}</td>
-                    <td class="mono-cell muted-cell small-cell">{{ log[4] or "—" }}</td>
-                    <td class="mono-cell muted-cell small-cell">{{ log[5] }}</td>
-                </tr>
-                {% endfor %}
-                {% if not logs %}
-                <tr>
-                    <td colspan="6" style="text-align:center; color:var(--ink-muted); padding:24px;">
-                        No activity recorded yet.
-                    </td>
-                </tr>
-                {% endif %}
-                </tbody>
-            </table>
-        </div>
-
-        <div class="result-actions" style="margin-top:24px;">
-            <a href="/admin" class="btn btn-primary">Admin Panel</a>
-            <a href="/dashboard" class="btn btn-ghost">Dashboard</a>
-        </div>
-    </div>
+{% block content %}
+<div class="page-header">
+    <div class="page-header-eyebrow">System audit trail</div>
+    <div class="page-header-title">Activity Log</div>
+    <div class="page-header-sub">Last 100 user actions recorded</div>
 </div>
 
-<script src="{{ url_for('static', filename='js/theme.js') }}"></script>
-</body>
-</html>
+<div class="table-wrap">
+    <table class="history-table">
+        <thead>
+            <tr>
+                <th>Ref</th>
+                <th>User</th>
+                <th>Action</th>
+                <th>Detail</th>
+                <th>IP Address</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for log in logs %}
+        <tr>
+            <td class="mono-cell muted-cell">#{{ "%04d"|format(log[0]) }}</td>
+            <td class="strong-cell">{{ log[1] or "—" }}</td>
+            <td><span class="activity-tag activity-{{ log[2] }}">{{ log[2] }}</span></td>
+            <td class="muted-cell small-cell">{{ log[3] or "—" }}</td>
+            <td class="mono-cell muted-cell small-cell">{{ log[4] or "—" }}</td>
+            <td class="mono-cell muted-cell small-cell">{{ log[5] }}</td>
+        </tr>
+        {% endfor %}
+        {% if not logs %}
+        <tr><td colspan="6" style="text-align:center; color:var(--text-3); padding:24px;">No activity recorded yet.</td></tr>
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
