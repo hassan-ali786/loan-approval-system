@@ -1,67 +1,56 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LoanIQ — Case Decision</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
+{% extends "base_user.html" %}
+{% block title %}Decision{% endblock %}
+{% block nav_apply %}active{% endblock %}
+{% block topbar_title %}<span>Decision Result</span>{% endblock %}
+{% block topbar_actions %}
+<a href="/" class="btn btn-ghost btn-sm">New Application</a>
+<a href="/download-report" class="btn btn-ghost btn-sm">⬇ PDF</a>
+{% endblock %}
 
-<nav class="navbar">
-    <div class="navbar-inner">
-    <a href="/welcome" class="nav-logo">Loan<span>IQ</span></a>
-    <div class="nav-links">
-        {% if current_user.is_admin %}
-        <a href="/admin">Admin Panel</a>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/history">All History</a>
-        {% else %}
-        <a href="/">Apply</a>
-        <a href="/history">History</a>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/calculator">EMI Calc</a>
-        <a href="/compare">Compare</a>
-        {% endif %}
-        <a href="/profile">Profile</a>
-        <a href="/change-password">Password</a>
-        <a href="/logout">Logout</a>
-        <button class="theme-btn" id="themeToggle">☀️</button>
+{% block content %}
+<div class="page-header">
+    <div class="page-header-eyebrow">AI-powered underwriting decision</div>
+    <div class="page-header-title">Your Result</div>
+</div>
+
+<div class="card" style="text-align:center;">
+
+    <!-- Stamp -->
+    <div class="stamp-zone">
+        <div class="stamp {% if result == 'Approved' %}approved{% else %}rejected{% endif %}">
+            <span class="stamp-word">{{ result }}</span>
+            <span class="stamp-sub">{{ probability }}% confidence</span>
+        </div>
     </div>
+
+    <!-- Metrics -->
+    <div class="result-meta-grid">
+        <div class="result-meta-item">
+            <div class="result-meta-label">Risk Score</div>
+            <div class="result-meta-value">{{ risk_score }}<span style="font-size:13px;opacity:0.5;">/100</span></div>
+        </div>
+        <div class="result-meta-item">
+            <div class="result-meta-label">Max Suggested Loan</div>
+            <div class="result-meta-value">{{ max_loan }}k</div>
+        </div>
     </div>
-</nav>
 
-<div class="container">
-    <div class="card result-card">
-
-        <div class="case-header">
-            <div class="case-ref">Case file — decision recorded</div>
-            <div class="case-title">Underwriting decision</div>
+    <!-- Confidence -->
+    <div class="confidence-section" style="text-align:left;">
+        <div class="confidence-label-row">
+            <span class="confidence-label">Model Confidence</span>
+            <span class="confidence-pct">{{ probability }}%</span>
         </div>
-
-        <div class="stamp-zone">
-            <div class="stamp {% if result == 'Approved' %}approved{% else %}rejected{% endif %}">
-                <span class="stamp-word">{{ result }}</span>
-                <span class="stamp-sub">{{ probability }}% confidence</span>
-            </div>
+        <div class="confidence-bar-wrap">
+            <div class="confidence-bar" style="width:{{ probability }}%"></div>
         </div>
+    </div>
 
-        <div class="seal-row">
-            <div class="seal-box">
-                <div class="seal-label">Risk score</div>
-                <div class="seal-value">{{ risk_score }}<span style="font-size:13px;opacity:0.6;">/100</span></div>
-            </div>
-            <div class="seal-box">
-                <div class="seal-label">Max loan</div>
-                <div class="seal-value">{{ max_loan }}k</div>
-            </div>
-        </div>
-
+    <!-- SHAP Factors -->
+    <div style="text-align:left;">
+        <div class="section-label">SHAP Decision Factors</div>
         <div class="ledger">
-            <div class="ledger-head">
-                <span>Decision factor</span>
-                <span>Weight</span>
-            </div>
+            <div class="ledger-head"><span>Feature</span><span>Weight</span></div>
             {% for f in top_factors %}
             <div class="ledger-row">
                 <span class="ledger-item">{{ f.feature }}</span>
@@ -71,13 +60,13 @@
             </div>
             {% endfor %}
         </div>
+    </div>
 
-        {% if lime_factors %}
-        <div class="ledger" style="margin-top:16px;">
-            <div class="ledger-head">
-                <span>LIME explanation</span>
-                <span>Effect</span>
-            </div>
+    {% if lime_factors %}
+    <div style="text-align:left;">
+        <div class="section-label">LIME Explanation</div>
+        <div class="ledger">
+            <div class="ledger-head"><span>Condition</span><span>Effect</span></div>
             {% for f in lime_factors %}
             <div class="ledger-row">
                 <span class="ledger-item" style="font-size:11px;">{{ f.feature }}</span>
@@ -87,25 +76,22 @@
             </div>
             {% endfor %}
         </div>
+    </div>
+    {% endif %}
+
+    <!-- Note -->
+    <div class="result-note" style="text-align:left;">
+        {% if result == "Approved" %}
+        Your application profile meets the lending criteria. A representative may request documents to finalize.
+        {% else %}
+        This profile did not meet lending criteria. Improving credit history or adding a co-applicant may help. Your suggested ceiling based on current income: <strong>{{ max_loan }}k</strong>.
         {% endif %}
+    </div>
 
-        <div class="result-note">
-            {% if result == "Approved" %}
-            This profile meets the lending criteria on file. A representative may request documents to finalize the decision.
-            {% else %}
-            This profile did not meet the lending criteria. Credit history, total income, or a co-applicant could move the outcome. Suggested ceiling based on current income: <strong>{{ max_loan }}k</strong>.
-            {% endif %}
-        </div>
-
-        <div class="result-actions">
-            <a href="/" class="btn btn-primary">New application</a>
-            <a href="/download-report" class="btn btn-ghost">⬇ PDF report</a>
-            <a href="/history" class="btn btn-ghost">History</a>
-        </div>
-
+    <div class="result-actions" style="justify-content:center;">
+        <a href="/" class="btn btn-primary">New Application</a>
+        <a href="/download-report" class="btn btn-ghost">⬇ PDF Report</a>
+        <a href="/history" class="btn btn-ghost">History</a>
     </div>
 </div>
-
-<script src="{{ url_for('static', filename='js/theme.js') }}"></script>
-</body>
-</html>
+{% endblock %}

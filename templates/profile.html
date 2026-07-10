@@ -1,0 +1,79 @@
+{% extends "base_user.html" %}
+{% block title %}Profile{% endblock %}
+{% block nav_profile %}active{% endblock %}
+{% block topbar_title %}<span>My Profile</span>{% endblock %}
+{% block topbar_actions %}
+<a href="/change-password" class="btn btn-ghost btn-sm">Change Password</a>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-eyebrow">Account information</div>
+    <div class="page-header-title">{{ current_user.username }}</div>
+    <div class="page-header-sub">{{ current_user.email }}</div>
+</div>
+
+<div class="metrics-grid" style="margin-bottom:24px;">
+    <div class="metric-card">
+        <div class="metric-label">Total Filings</div>
+        <div class="metric-value">{{ total_predictions }}</div>
+    </div>
+    <div class="metric-card green-accent">
+        <div class="metric-label">Approved</div>
+        <div class="metric-value green">{{ approved }}</div>
+    </div>
+    <div class="metric-card red-accent">
+        <div class="metric-label">Rejected</div>
+        <div class="metric-value red">{{ rejected }}</div>
+    </div>
+    <div class="metric-card gold-accent">
+        <div class="metric-label">Avg Confidence</div>
+        <div class="metric-value gold">{{ avg_prob }}%</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div>
+            <div class="card-title">Account Details</div>
+            <div class="card-subtitle">Your registered information</div>
+        </div>
+    </div>
+
+    <div class="ledger">
+        <div class="ledger-head"><span>Field</span><span>Value</span></div>
+        <div class="ledger-row">
+            <span class="ledger-item">Username</span>
+            <span class="mono-cell">{{ current_user.username }}</span>
+        </div>
+        <div class="ledger-row">
+            <span class="ledger-item">Email</span>
+            <span class="mono-cell muted-cell">{{ current_user.email }}</span>
+        </div>
+        <div class="ledger-row">
+            <span class="ledger-item">Member since</span>
+            <span class="mono-cell muted-cell">{{ joined }}</span>
+        </div>
+        <div class="ledger-row">
+            <span class="ledger-item">Email verified</span>
+            <span>
+                {% if is_verified %}
+                <span class="badge badge-green">✓ Verified</span>
+                {% else %}
+                <span class="badge badge-muted">Unverified</span>
+                {% endif %}
+            </span>
+        </div>
+        <div class="ledger-row" style="border:none;">
+            <span class="ledger-item">Role</span>
+            <span class="badge badge-muted">Applicant</span>
+        </div>
+    </div>
+
+    <div class="btn-row" style="margin-top:20px;">
+        <a href="/" class="btn btn-primary">New Application</a>
+        <a href="/history" class="btn btn-ghost">My History</a>
+        <a href="/change-password" class="btn btn-ghost">Change Password</a>
+    </div>
+</div>
+{% endblock %}
