@@ -1,71 +1,67 @@
-# LoanIQ — AI-Powered Loan Approval Prediction System
+# LoanIQ — AI-Powered Loan Approval System
 
-> An end-to-end ML web application that predicts loan approval with explainable AI (SHAP + LIME), role-based access (user/admin), full admin panel, activity log, user profiles, email verification, prediction history, EMI calculator, PDF reports, and an analytics dashboard.
+A production-grade end-to-end machine learning web application that predicts loan eligibility with dual explainability (SHAP + LIME), role-based access control, a full admin panel, prediction history, EMI calculator, PDF reports, and an analytics dashboard.
 
 ---
 
-## Video Demo
+## Demo
 
-https://github.com/user-attachments/assets/e33417bf-384f-41e9-a908-f6ab358bc934
+> Video demo coming soon after live deployment.
 
 ---
 
 ## Features
 
-**Machine Learning**
-- Random Forest / XGBoost / LightGBM — auto-selects best model via 5-fold cross-validation
-- Feature engineering — EMI ratio, Total Income, Loan-Income Ratio, Income Per Dependent
-- SHAP explainability — top 5 factors as itemized ledger entries
-- LIME explanation — local feature effects alongside SHAP for double verification
-- Risk score (0–100) and suggested maximum loan amount
+### Machine Learning
+- **Auto model selection** — Random Forest, XGBoost, and LightGBM compete via 5-fold stratified cross-validation; the best-performing model is saved automatically
+- **Feature engineering** — 4 derived features: Total Income, EMI ratio, Income Per Dependent, Loan-to-Income Ratio
+- **SHAP explainability** — top 5 decision factors displayed as itemized ledger entries
+- **LIME explanation** — local feature effects alongside SHAP for independent verification
+- **Risk score** — model approval probability mapped to a 0–100 risk scale
+- **Max loan suggestion** — calculates the applicant's ceiling based on the 40% EMI rule
 
-**Authentication & Roles**
-- User signup with email verification (one-time link sent via email)
+### Authentication
+- Signup with email verification (one-time token link)
 - Login, logout, forgot password (email reset link), change password
-- First registered account is automatically promoted to **Admin**
-- Role-based navigation — admins and regular users see completely different interfaces
-- Blocked users are stopped at login with a clear message
+- Passwords hashed with Werkzeug (bcrypt-backed)
+- First registered account is automatically promoted to admin
+- Blocked users are rejected at login with a clear message
 
-**Admin Panel** (`/admin`)
-- System-wide stats — total users, total applications, approved/rejected counts, avg confidence
-- Full searchable, filterable (all/active/blocked), paginated user registry
-- Block / Unblock any non-admin user
-- Delete a user and their entire prediction history (admins are protected)
+### Admin Panel
+- System-wide stats — total users, applications, approval/rejection counts, average confidence
+- Searchable, filterable (all / active / blocked), paginated user registry
+- Block / unblock or delete any non-admin user
 - Export full user list as CSV
-- Model retrain button — triggers RF/XGBoost/LightGBM cross-validation and hot-reloads best model
+- Model retrain button — triggers cross-validation pipeline and hot-reloads the best model in memory
 - Bell icon with unread notification badge and dropdown
-- Link to Activity Log
+- Activity log — every login, logout, prediction, block, delete, and retrain recorded with IP and timestamp
 
-**Activity Log** (`/admin/activity-log`)
-- Records every login, logout, prediction, block, delete, and model retrain with timestamp and IP
-
-**User Profile** (`/profile`)
-- Account info — username, email, join date, email verification status
-- Personal application stats — total filings, approved, rejected, avg confidence
-
-**Applicant Features**
-- Multi-step loan application form with progress bar
-- Per-user prediction history with pagination (SQLite)
-- Loan scenario comparison — compare 3 applications side by side
-- EMI calculator with principal vs interest breakdown chart
-- PDF report download — formatted decision report with SHAP factors
+### Applicant Features
+- 3-step loan application form with animated step indicator
+- Per-user prediction history with pagination
+- Loan scenario comparison — run 3 scenarios side by side
+- EMI calculator with principal vs interest doughnut chart
+- PDF report download (ReportLab) — decision, SHAP factors, application details
 - CSV export of personal prediction history
-- Email notification on every decision
+- Email notification on every decision (Flask-Mail)
 
-**Analytics Dashboard** (`/dashboard`)
-- Regular users see their own stats; admins see system-wide aggregated stats
-- Approval/rejection doughnut (click to filter history)
-- 30-day monthly trend line chart
-- Feature importance bar chart
+### Analytics Dashboard
+- Regular users see their own stats; admins see system-wide aggregated data
+- Approval/rejection doughnut chart — click a segment to filter history
+- 30-day trend line chart
+- Feature importance horizontal bar chart
 
-**Design**
-- Case file / underwriting ledger visual identity throughout
-- Decision stamp animation on result page (APPROVED / DECLINED rubber-stamp effect)
-- SHAP and LIME displayed as accounting ledger entries (credit/debit)
-- `Fraunces` (display) + `IBM Plex Mono` (data/ledger) typography
-- Dark / Light theme toggle (persists via localStorage)
-- Loading animation, page transitions, micro-interactions
-- Fully responsive
+### User Profile
+- Account info, join date, email verification status
+- Personal application stats
+
+### UI
+- Sidebar navigation layout — fixed left sidebar with section groups and active states
+- **Inter** (UI) + **JetBrains Mono** (data/code) typography
+- Dark / Light theme toggle persisting via localStorage
+- Decision stamp animation on result page
+- Loading overlay on form submission
+- Fully responsive — mobile sidebar slides in via hamburger button
 
 ---
 
@@ -75,9 +71,26 @@ https://github.com/user-attachments/assets/e33417bf-384f-41e9-a908-f6ab358bc934
 |--------|-------|
 | Accuracy | ~82% |
 | Recall (Approved) | ~0.89 |
-| CV Folds | 5-fold Stratified |
-| Best Model | Auto-selected (RF / XGBoost / LightGBM) |
-| Features | 15 (11 original + 4 engineered) |
+| Cross-validation | 5-fold Stratified |
+| Model | Auto-selected (RF / XGBoost / LightGBM) |
+| Total Features | 15 (11 original + 4 engineered) |
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Web Framework | Flask 3.x |
+| Authentication | Flask-Login, Werkzeug |
+| Email | Flask-Mail (Gmail SMTP) |
+| ML Models | scikit-learn, XGBoost, LightGBM |
+| Explainability | SHAP, LIME |
+| Data | pandas, NumPy |
+| Database | SQLite (via Python sqlite3) |
+| PDF Generation | ReportLab |
+| Charts | Chart.js |
+| Production Server | Gunicorn |
 
 ---
 
@@ -91,110 +104,123 @@ Loan-Approval-System/
 │   └── test.csv
 │
 ├── model/
-│   ├── loan_model.pkl
-│   └── features.pkl
+│   ├── loan_model.pkl          # trained model (auto-selected)
+│   └── features.pkl            # feature list
 │
 ├── templates/
-│   ├── landing.html
+│   ├── base_user.html          # sidebar layout base — all applicant pages extend this
+│   ├── base_admin.html         # sidebar layout base — all admin pages extend this
+│   ├── landing.html            # public landing page
 │   ├── login.html
 │   ├── signup.html
 │   ├── forgot_password.html
 │   ├── reset_password.html
 │   ├── change_password.html
 │   ├── profile.html
-│   ├── index.html            ← applicant: loan form
-│   ├── result.html           ← decision stamp + SHAP + LIME ledger
-│   ├── history.html          ← own (user) / all (admin) with pagination
-│   ├── dashboard.html        ← own (user) / system-wide (admin)
-│   ├── calculator.html       ← EMI calculator
-│   ├── compare.html          ← scenario comparison
-│   ├── admin.html            ← system ledger + user registry
-│   └── activity_log.html     ← admin audit trail
+│   ├── index.html              # loan application form
+│   ├── result.html             # decision + SHAP + LIME
+│   ├── history.html            # own (user) / all (admin) with pagination
+│   ├── dashboard.html          # own (user) / system-wide (admin)
+│   ├── calculator.html         # EMI calculator
+│   ├── compare.html            # scenario comparison
+│   ├── admin.html              # user registry + system stats
+│   └── activity_log.html       # audit trail
 │
 ├── static/
 │   ├── css/
-│   │   ├── style.css
-│   │   └── landing.css
+│   │   ├── style.css           # full design system
+│   │   └── landing.css         # landing page styles
 │   └── js/
-│       ├── form.js
-│       └── theme.js
+│       ├── form.js             # multi-step form + step dots
+│       └── theme.js            # dark/light toggle + mobile sidebar
 │
-├── app.py
-├── auth.py
-├── train_model.py
+├── app.py                      # Flask routes, prediction pipeline, admin, PDF
+├── auth.py                     # User model, password hashing, tokens, activity log
+├── train_model.py              # training pipeline with model comparison
 ├── requirements.txt
 └── README.md
 ```
 
 ---
 
-## Pages & Access
+## Pages
 
 | URL | Access | Description |
 |-----|--------|-------------|
 | `/welcome` | Public | Landing page |
 | `/signup` | Public | Create account |
 | `/login` | Public | Sign in |
-| `/verify-email/<token>` | Public | Email verification link |
+| `/verify-email/<token>` | Public | Email verification |
 | `/forgot-password` | Public | Request reset email |
 | `/reset-password/<token>` | Public | Set new password |
-| `/change-password` | User & Admin | Change own password |
-| `/profile` | User only | Account info + application stats |
-| `/` | User only | Loan application form |
-| `/compare` | User only | Compare 3 scenarios |
-| `/calculator` | User only | EMI calculator |
-| `/history` | User & Admin | Own / all predictions with pagination |
-| `/dashboard` | User & Admin | Own / system-wide analytics |
-| `/export-csv` | User & Admin | CSV export scoped to role |
-| `/download-report` | User only | PDF report of last prediction |
-| `/admin` | Admin only | System ledger + user management |
-| `/admin/activity-log` | Admin only | Audit trail |
-| `/admin/notifications` | Admin only | Bell dropdown (JSON) |
-| `/admin/retrain` | Admin only | Retrain model |
+| `/` | User | Loan application form |
+| `/compare` | User | Compare 3 scenarios |
+| `/calculator` | User | EMI calculator |
+| `/profile` | User | Account info and stats |
+| `/change-password` | User + Admin | Update password |
+| `/history` | User + Admin | Predictions (scoped by role) |
+| `/dashboard` | User + Admin | Analytics (scoped by role) |
+| `/export-csv` | User + Admin | CSV export (scoped by role) |
+| `/download-report` | User | PDF report of last prediction |
+| `/admin` | Admin | System ledger + user management |
+| `/admin/activity-log` | Admin | Audit trail |
+| `/admin/retrain` | Admin | Retrain model |
+| `/admin/notifications` | Admin | Bell dropdown (JSON) |
 
 ---
 
 ## Local Setup
 
+**1. Clone the repository**
 ```bash
 git clone https://github.com/hassan-ali786/loan-approval-prediction.git
 cd loan-approval-prediction
+```
+
+**2. Install dependencies**
+```bash
 pip install -r requirements.txt
+```
+
+**3. Train the model**
+```bash
 python train_model.py
+```
+This runs RF vs XGBoost vs LightGBM comparison, prints accuracy/recall, and saves the best model to `model/`.
+
+**4. Run the app**
+```bash
 python app.py
 ```
 
-Open `http://127.0.0.1:5000`
-
-The **first account you sign up** automatically becomes the admin.
-
-To enable emails (verification, reset, notifications), set Gmail credentials in `app.py`:
-```python
-app.config['MAIL_USERNAME'] = 'your-email@gmail.com'
-app.config['MAIL_PASSWORD'] = 'your-app-password'
+**5. Open in browser**
 ```
+http://127.0.0.1:5000
+```
+
+The first account you register becomes the admin automatically.
 
 ---
 
-## Tech Stack
+## Email Configuration (Optional)
 
-![Python](https://img.shields.io/badge/Python-3.x-blue?logo=python)
-![Flask](https://img.shields.io/badge/Flask-Web%20Framework-black?logo=flask)
-![Flask-Login](https://img.shields.io/badge/Flask--Login-Auth-blue)
-![XGBoost](https://img.shields.io/badge/XGBoost-ML%20Model-orange)
-![LightGBM](https://img.shields.io/badge/LightGBM-ML%20Model-green)
-![SHAP](https://img.shields.io/badge/SHAP-Explainability-purple)
-![LIME](https://img.shields.io/badge/LIME-Local%20Explanation-blueviolet)
-![SQLite](https://img.shields.io/badge/SQLite-Database-lightgrey?logo=sqlite)
-![ReportLab](https://img.shields.io/badge/ReportLab-PDF%20Reports-red)
-![Chart.js](https://img.shields.io/badge/Chart.js-Dashboard-red)
+To enable email verification, password reset, and loan decision notifications, add your Gmail credentials to `app.py`:
+
+```python
+app.config['MAIL_USERNAME'] = 'your-email@gmail.com'
+app.config['MAIL_PASSWORD'] = 'your-app-password'   # Gmail App Password
+```
+
+The app works without this — emails fail silently and everything else functions normally.
 
 ---
 
 ## Roadmap
 
-- [ ] Containerize with Docker
-- [ ] Deploy live demo (Render)
+- [ ] Docker containerization
+- [ ] Live deployment (Render)
+- [ ] PostgreSQL migration for production scale
+- [ ] API endpoints for external integration
 
 ---
 
@@ -209,6 +235,6 @@ https://www.kaggle.com/datasets/altruistdelhite04/loan-prediction-problem-datase
 
 **Hassan Ali** — Data Scientist & ML Engineer
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?logo=linkedin)](https://linkedin.com/in/hassan-ali-datascientist)
-[![GitHub](https://img.shields.io/badge/GitHub-hassan--ali786-black?logo=github)](https://github.com/hassan-ali786)
-[![Portfolio](https://img.shields.io/badge/Portfolio-Visit-gold)](https://hassanali-portfolio.vercel.app)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?logo=linkedin&logoColor=white)](https://linkedin.com/in/hassan-ali-datascientist)
+[![GitHub](https://img.shields.io/badge/GitHub-hassan--ali786-181717?logo=github&logoColor=white)](https://github.com/hassan-ali786)
+[![Kaggle](https://img.shields.io/badge/Kaggle-Datasets%20Master-20BEFF?logo=kaggle&logoColor=white)](https://kaggle.com/hassanali786)
