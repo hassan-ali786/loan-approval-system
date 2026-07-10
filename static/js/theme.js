@@ -1,28 +1,38 @@
-// Theme toggle
-const toggleBtn = document.getElementById('themeToggle');
-const root = document.documentElement;
+// ─── Theme toggle ───────────────────────────────
+const saved = localStorage.getItem('loaniq-theme') || 'dark';
+document.documentElement.setAttribute('data-theme', saved);
 
-// Load saved theme
-const saved = localStorage.getItem('theme') || 'dark';
-root.setAttribute('data-theme', saved);
-if (toggleBtn) toggleBtn.textContent = saved === 'dark' ? '☀️' : '🌙';
-
-if (toggleBtn) {
-    toggleBtn.addEventListener('click', () => {
-        const current = root.getAttribute('data-theme');
-        const next = current === 'dark' ? 'light' : 'dark';
-        root.setAttribute('data-theme', next);
-        localStorage.setItem('theme', next);
-        toggleBtn.textContent = next === 'dark' ? '☀️' : '🌙';
+const themeBtn = document.getElementById('themeToggle');
+if (themeBtn) {
+    themeBtn.textContent = saved === 'dark' ? '☀' : '🌙';
+    themeBtn.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme');
+        const next    = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('loaniq-theme', next);
+        themeBtn.textContent = next === 'dark' ? '☀' : '🌙';
     });
 }
 
-// Loading animation on form submit
-const form = document.getElementById('loanForm');
+// ─── Loading overlay on form submit ─────────────
+const form    = document.getElementById('loanForm');
 const overlay = document.getElementById('loadingOverlay');
-
 if (form && overlay) {
     form.addEventListener('submit', () => {
         overlay.classList.add('active');
+    });
+}
+
+// ─── Mobile sidebar toggle ──────────────────────
+const sidebar     = document.getElementById('sidebar');
+const sidebarBtn  = document.getElementById('sidebarToggle');
+if (sidebarBtn && sidebar) {
+    sidebarBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+    });
+    document.addEventListener('click', e => {
+        if (!e.target.closest('.sidebar') && !e.target.closest('#sidebarToggle')) {
+            sidebar.classList.remove('open');
+        }
     });
 }
