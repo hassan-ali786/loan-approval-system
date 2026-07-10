@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LoanIQ Admin — {% block title %}{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="app-shell">
+
+    <aside class="sidebar" id="sidebar">
+        <a href="/admin" class="sidebar-brand">
+            <div class="sidebar-brand-logo">LQ</div>
+            <span class="sidebar-brand-name">Loan<span>IQ</span></span>
+        </a>
+
+        <nav class="sidebar-nav">
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Admin</div>
+                <a href="/admin" class="sidebar-link {% block nav_admin %}{% endblock %}">
+                    <span class="sidebar-link-icon">🛡️</span> Panel
+                </a>
+                <a href="/dashboard" class="sidebar-link {% block nav_dashboard %}{% endblock %}">
+                    <span class="sidebar-link-icon">📊</span> Dashboard
+                </a>
+                <a href="/history" class="sidebar-link {% block nav_history %}{% endblock %}">
+                    <span class="sidebar-link-icon">🗂️</span> All History
+                </a>
+                <a href="/admin/activity-log" class="sidebar-link {% block nav_activity %}{% endblock %}">
+                    <span class="sidebar-link-icon">📜</span> Activity Log
+                </a>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Account</div>
+                <a href="/change-password" class="sidebar-link {% block nav_password %}{% endblock %}">
+                    <span class="sidebar-link-icon">🔑</span> Password
+                </a>
+                <a href="/logout" class="sidebar-link" style="color:var(--red);">
+                    <span class="sidebar-link-icon">🚪</span> Sign Out
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar">{{ current_user.username[:2].upper() }}</div>
+                <div class="sidebar-user-info">
+                    <div class="sidebar-username">{{ current_user.username }}</div>
+                    <div class="sidebar-role" style="color:var(--gold-text);">Admin</div>
+                </div>
+                <div class="bell-wrap" style="margin-right:4px;">
+                    <button class="bell-btn" id="bellBtn" onclick="toggleBell()">
+                        🔔
+                        {% if unread_count > 0 %}
+                        <span class="bell-badge">{{ unread_count }}</span>
+                        {% endif %}
+                    </button>
+                    <div class="bell-dropdown" id="bellDropdown">
+                        <div class="bell-header">Notifications</div>
+                        <div id="bellList"><div class="bell-empty">Loading...</div></div>
+                    </div>
+                </div>
+                <button class="theme-btn" id="themeToggle" style="padding:4px 6px; font-size:12px;">☀</button>
+            </div>
+        </div>
+    </aside>
+
+    <div class="main">
+        <div class="topbar">
+            <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+            <div class="topbar-title">{% block topbar_title %}{% endblock %}</div>
+            <div class="topbar-actions">{% block topbar_actions %}{% endblock %}</div>
+        </div>
+
+        <div class="{% block content_class %}page-content-wide{% endblock %}">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}{% for m in messages %}
+                <div class="alert alert-error" style="margin-bottom:14px;">{{ m }}</div>
+                {% endfor %}{% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+<script>
+function toggleBell() {
+    const dropdown = document.getElementById('bellDropdown');
+    dropdown.classList.toggle('open');
+    if (dropdown.classList.contains('open')) {
+        fetch('/admin/notifications').then(r => r.json()).then(data => {
+            const list = document.getElementById('bellList');
+            if (!data.length) { list.innerHTML = '<div class="bell-empty">No notifications.</div>'; return; }
+            list.innerHTML = data.map(n => `
+                <div class="bell-item ${n.is_read ? '' : 'bell-unread'}">
+                    <span class="bell-msg">${n.message}</span>
+                    <span class="bell-time">${n.created_at}</span>
+                </div>`).join('');
+            const badge = document.querySelector('.bell-badge');
+            if (badge) badge.remove();
+        });
+    }
+}
+document.addEventListener('click', e => {
+    if (!e.target.closest('.bell-wrap')) {
+        const d = document.getElementById('bellDropdown');
+        if (d) d.classList.remove('open');
+    }
+});
+</script>
+</body>
+</html>

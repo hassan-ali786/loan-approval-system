@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LoanIQ — {% block title %}{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="app-shell">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <a href="/" class="sidebar-brand">
+            <div class="sidebar-brand-logo">LQ</div>
+            <span class="sidebar-brand-name">Loan<span>IQ</span></span>
+        </a>
+
+        <nav class="sidebar-nav">
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Main</div>
+                <a href="/" class="sidebar-link {% block nav_apply %}{% endblock %}">
+                    <span class="sidebar-link-icon">📋</span> Apply
+                </a>
+                <a href="/compare" class="sidebar-link {% block nav_compare %}{% endblock %}">
+                    <span class="sidebar-link-icon">⚖️</span> Compare
+                </a>
+                <a href="/calculator" class="sidebar-link {% block nav_calc %}{% endblock %}">
+                    <span class="sidebar-link-icon">🧮</span> EMI Calc
+                </a>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Records</div>
+                <a href="/history" class="sidebar-link {% block nav_history %}{% endblock %}">
+                    <span class="sidebar-link-icon">🗂️</span> History
+                </a>
+                <a href="/dashboard" class="sidebar-link {% block nav_dashboard %}{% endblock %}">
+                    <span class="sidebar-link-icon">📊</span> Dashboard
+                </a>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Account</div>
+                <a href="/profile" class="sidebar-link {% block nav_profile %}{% endblock %}">
+                    <span class="sidebar-link-icon">👤</span> Profile
+                </a>
+                <a href="/change-password" class="sidebar-link {% block nav_password %}{% endblock %}">
+                    <span class="sidebar-link-icon">🔑</span> Password
+                </a>
+                <a href="/logout" class="sidebar-link" style="color:var(--red);">
+                    <span class="sidebar-link-icon">🚪</span> Sign Out
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar">{{ current_user.username[:2].upper() }}</div>
+                <div class="sidebar-user-info">
+                    <div class="sidebar-username">{{ current_user.username }}</div>
+                    <div class="sidebar-role">Applicant</div>
+                </div>
+                <button class="theme-btn" id="themeToggle" style="padding:4px 6px; font-size:12px;">☀</button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main">
+        <div class="topbar">
+            <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+            <div class="topbar-title">{% block topbar_title %}{% endblock %}</div>
+            <div class="topbar-actions">{% block topbar_actions %}{% endblock %}</div>
+        </div>
+
+        <div class="{% block content_class %}page-content{% endblock %}">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+</div>
+
+<!-- Loading overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Processing...</div>
+</div>
+
+<script src="{{ url_for('static', filename='js/form.js') }}"></script>
+<script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+</body>
+</html>
