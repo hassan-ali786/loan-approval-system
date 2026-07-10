@@ -1,61 +1,47 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LoanIQ — Create Account</title>
+<title>LoanIQ — Sign Up</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+<div class="auth-layout">
+    <a href="/welcome" class="auth-brand">
+        <div class="auth-logo">LQ</div>
+        <span class="auth-name">Loan<span>IQ</span></span>
+    </a>
 
-<nav class="navbar">
-    <div class="navbar-inner">
-    <a href="/welcome" class="nav-logo">Loan<span>IQ</span></a>
-    <div class="nav-links">
-        <a href="/welcome">Home</a>
-        <a href="/login">Sign In</a>
-        <button class="theme-btn" id="themeToggle">☀️</button>
-    </div>
-    </div>
-</nav>
-
-<div class="container" style="max-width:420px;">
-    <div class="card">
-        <div class="case-header">
-            <div class="case-ref">New applicant registration</div>
-            <div class="case-title">Create account</div>
-        </div>
+    <div class="auth-card">
+        <div class="auth-title">Create account</div>
+        <div class="auth-subtitle">Start checking your loan eligibility</div>
 
         {% if error %}
-        <div class="error-box">{{ error }}</div>
+        <div class="alert alert-error">{{ error }}</div>
         {% endif %}
 
         <form method="POST">
             <div class="form-group">
-                <label>Full name</label>
-                <input type="text" name="username" placeholder="Hassan Ali" required>
+                <label>Full Name</label>
+                <input type="text" name="username" placeholder="Hassan Ali" required autofocus>
             </div>
             <div class="form-group">
-                <label>Email address</label>
+                <label>Email</label>
                 <input type="email" name="email" placeholder="you@example.com" required>
             </div>
             <div class="form-group">
                 <label>Password</label>
                 <input type="password" name="password" placeholder="Min 6 characters" required>
             </div>
-            <button type="submit" class="btn btn-submit" style="width:100%; justify-content:center; margin-top:8px;">
-                Create Account
-            </button>
+            <button type="submit" class="btn btn-primary" style="width:100%;">Create Account</button>
         </form>
 
-        <div class="ledger" style="margin-top:24px;">
-            <div class="ledger-row" style="justify-content:center; border:none;">
-                <span class="muted-cell small-cell">Already have an account? <a href="/login" style="color:var(--brass-light); text-decoration:none; font-weight:600;">Sign in →</a></span>
-            </div>
+        <div class="auth-footer">
+            Already have an account? <a href="/login">Sign in →</a>
         </div>
     </div>
 </div>
-
 <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 </body>
 </html>
