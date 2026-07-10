@@ -1,143 +1,102 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LoanIQ — History</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
+{% extends "base_user.html" if not is_admin_view else "base_admin.html" %}
+{% block title %}History{% endblock %}
+{% block nav_history %}active{% endblock %}
+{% block topbar_title %}<span>{% if is_admin_view %}All Applications{% else %}My History{% endif %}</span>{% endblock %}
+{% block topbar_actions %}
+<a href="/export-csv" class="btn btn-ghost btn-sm">⬇ Export CSV</a>
+{% endblock %}
+{% block content_class %}page-content-wide{% endblock %}
 
-<nav class="navbar">
-    <div class="navbar-inner">
-    <a href="/welcome" class="nav-logo">Loan<span>IQ</span></a>
-    <div class="nav-links">
-        {% if current_user.is_admin %}
-        <a href="/admin">Admin Panel</a>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/history">All History</a>
-        {% else %}
-        <a href="/">Apply</a>
-        <a href="/history">History</a>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/calculator">EMI Calc</a>
-        <a href="/compare">Compare</a>
+{% block content %}
+<div class="page-header">
+    <div class="page-header-eyebrow">{% if is_admin_view %}System-wide records{% else %}Your application records{% endif %}</div>
+    <div class="page-header-title">{% if is_admin_view %}All Applications{% else %}Prediction History{% endif %}</div>
+    <div class="page-header-sub">
+        {% if active_filter %}Showing {{ active_filter }} only —
+            <a href="/history" style="color:var(--gold-text);">clear filter</a>
+        {% else %}{{ total }} total records
         {% endif %}
-        <a href="/profile">Profile</a>
-        <a href="/change-password">Password</a>
-        <a href="/logout">Logout</a>
-        <button class="theme-btn" id="themeToggle">☀️</button>
-    </div>
-    </div>
-</nav>
-
-<div class="container-wide">
-    <div class="card">
-        <div class="card-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
-            <div>
-                <h1>{% if is_admin_view %}All Applications{% else %}Prediction History{% endif %}</h1>
-                <p>
-                    {% if active_filter %}Showing {{ active_filter }} only · <a href="/history" style="color:var(--brass-light);">Clear filter</a>
-                    {% elif is_admin_view %}Last 100 applications across all users ({{ total }} total)
-                    {% else %}{{ total }} applications on file{% endif %}
-                </p>
-                <div class="gold-line"></div>
-            </div>
-            <a href="/export-csv" class="btn btn-primary" style="margin-top:6px;">⬇ Export CSV</a>
-        </div>
-
-        {% if rows %}
-        <div class="table-wrap">
-            <table class="history-table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        {% if is_admin_view %}<th>Applicant</th>{% endif %}
-                        <th>Time</th>
-                        <th>Decision</th>
-                        <th>Confidence</th>
-                        <th>Risk</th>
-                        <th>Income</th>
-                        <th>Loan</th>
-                        <th>Max Loan</th>
-                        <th>Credit</th>
-                        {% if is_admin_view %}<th>Officer Note</th>{% endif %}
-                    </tr>
-                </thead>
-                <tbody>
-                {% for row in rows %}
-                <tr>
-                    <td class="mono-cell muted-cell">{{ row[0] }}</td>
-                    {% if is_admin_view %}
-                    <td class="strong-cell">{{ row[10] or "—" }}</td>
-                    {% endif %}
-                    <td class="muted-cell small-cell">{{ row[1] }}</td>
-                    <td>
-                        <span class="pill {% if row[2] == 'Approved' %}pill-approved{% else %}pill-rejected{% endif %}">
-                            {% if row[2] == 'Approved' %}✓{% else %}✕{% endif %} {{ row[2] }}
-                        </span>
-                    </td>
-                    <td class="mono-cell" style="color:var(--brass-light);">{{ row[3] }}%</td>
-                    <td class="mono-cell">{{ row[4] }}/100</td>
-                    <td class="mono-cell">{{ row[5] }}</td>
-                    <td class="mono-cell">{{ row[6] }}k</td>
-                    <td class="mono-cell" style="color:var(--brass-light);">{{ row[9] }}k</td>
-                    <td>
-                        <span class="pill {% if row[7] == 1 %}pill-approved{% else %}pill-rejected{% endif %}">
-                            {% if row[7] == 1 %}Good{% else %}Poor{% endif %}
-                        </span>
-                    </td>
-                    {% if is_admin_view %}
-                    <td>
-                        <form method="POST" action="/admin/note/{{ row[0] }}" class="note-form">
-                            <input type="text" name="note"
-                                   value="{{ row[11] if row|length > 11 and row[11] else '' }}"
-                                   placeholder="Add note…"
-                                   class="note-input"
-                                   maxlength="500">
-                            <button type="submit" class="ledger-btn note-save-btn">Save</button>
-                        </form>
-                    </td>
-                    {% endif %}
-                </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <div class="empty-state">
-            <p>No predictions yet.</p>
-            {% if not is_admin_view %}
-            <a href="/" class="btn btn-primary">Make First Application</a>
-            {% endif %}
-        </div>
-        {% endif %}
-
-        <!-- Pagination -->
-        {% if total_pages > 1 %}
-        <div class="pagination-row">
-            {% if page > 1 %}
-            <a href="/history?page={{ page-1 }}{% if active_filter %}&filter={{ active_filter }}{% endif %}" class="ledger-btn page-btn">← Prev</a>
-            {% endif %}
-            <span class="mono-cell muted-cell">Page {{ page }} of {{ total_pages }}</span>
-            {% if page < total_pages %}
-            <a href="/history?page={{ page+1 }}{% if active_filter %}&filter={{ active_filter }}{% endif %}" class="ledger-btn page-btn">Next →</a>
-            {% endif %}
-        </div>
-        {% endif %}
-
-        <div class="result-actions" style="margin-top:24px;">
-            {% if is_admin_view %}
-            <a href="/admin" class="btn btn-primary">Admin Panel</a>
-            {% else %}
-            <a href="/" class="btn btn-primary">New Application</a>
-            {% endif %}
-            <a href="/export-csv" class="btn btn-ghost">⬇ Export CSV</a>
-            <a href="/dashboard" class="btn btn-ghost">Dashboard</a>
-        </div>
     </div>
 </div>
 
-<script src="{{ url_for('static', filename='js/theme.js') }}"></script>
-</body>
-</html>
+{% if rows %}
+<div class="table-wrap">
+    <table class="history-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                {% if is_admin_view %}<th>Applicant</th>{% endif %}
+                <th>Time</th>
+                <th>Decision</th>
+                <th>Confidence</th>
+                <th>Risk</th>
+                <th>Income</th>
+                <th>Loan</th>
+                <th>Max Loan</th>
+                <th>Credit</th>
+                {% if is_admin_view %}<th>Note</th>{% endif %}
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in rows %}
+        <tr class="{% if row[4] is defined and row[4] == 1 %}row-blocked{% endif %}">
+            <td class="mono-cell muted-cell">{{ row[0] }}</td>
+            {% if is_admin_view %}
+            <td class="strong-cell">{{ row[10] or "—" }}</td>
+            {% endif %}
+            <td class="muted-cell small-cell">{{ row[1] }}</td>
+            <td>
+                <span class="badge {% if row[2] == 'Approved' %}badge-green{% else %}badge-red{% endif %}">
+                    {% if row[2] == 'Approved' %}✓{% else %}✕{% endif %} {{ row[2] }}
+                </span>
+            </td>
+            <td class="mono-cell" style="color:var(--gold-text);">{{ row[3] }}%</td>
+            <td class="mono-cell">{{ row[4] }}/100</td>
+            <td class="mono-cell">{{ row[5] }}</td>
+            <td class="mono-cell">{{ row[6] }}k</td>
+            <td class="mono-cell" style="color:var(--gold-text);">{{ row[9] }}k</td>
+            <td>
+                <span class="badge {% if row[7] == 1 %}badge-green{% else %}badge-red{% endif %}">
+                    {% if row[7] == 1 %}Good{% else %}Poor{% endif %}
+                </span>
+            </td>
+            {% if is_admin_view %}
+            <td>
+                <form method="POST" action="/admin/note/{{ row[0] }}" class="note-form">
+                    <input type="text" name="note"
+                           value="{{ row[11] if row|length > 11 and row[11] else '' }}"
+                           placeholder="Add note…" class="note-input" maxlength="500">
+                    <button type="submit" class="ledger-btn note-save-btn">Save</button>
+                </form>
+            </td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card" style="text-align:center; padding:48px;">
+    <div style="font-size:32px; margin-bottom:12px;">🗂️</div>
+    <div style="font-size:15px; font-weight:600; color:var(--text-1); margin-bottom:6px;">No records yet</div>
+    <div style="font-size:13px; color:var(--text-3); margin-bottom:20px;">
+        {% if is_admin_view %}No applications in the system yet.{% else %}Your predictions will appear here.{% endif %}
+    </div>
+    {% if not is_admin_view %}
+    <a href="/" class="btn btn-primary">Make First Application</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if total_pages > 1 %}
+<div class="pagination-row">
+    {% if page > 1 %}
+    <a href="/history?page={{ page-1 }}{% if active_filter %}&filter={{ active_filter }}{% endif %}" class="ledger-btn page-btn">← Prev</a>
+    {% endif %}
+    <span class="mono-cell muted-cell">Page {{ page }} of {{ total_pages }}</span>
+    {% if page < total_pages %}
+    <a href="/history?page={{ page+1 }}{% if active_filter %}&filter={{ active_filter }}{% endif %}" class="ledger-btn page-btn">Next →</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

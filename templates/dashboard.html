@@ -1,262 +1,138 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LoanIQ — Dashboard</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+{% extends "base_user.html" if not is_admin_view else "base_admin.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+{% block topbar_title %}
+    {% if is_admin_view %}<span>System Dashboard</span>{% else %}<span>My Dashboard</span>{% endif %}
+{% endblock %}
+{% block topbar_actions %}
+<a href="/export-csv" class="btn btn-ghost btn-sm">⬇ Export CSV</a>
+{% endblock %}
+{% block content_class %}page-content-wide{% endblock %}
+
+{% block content %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-</head>
-<body>
 
-<nav class="navbar">
-    <div class="navbar-inner">
-    <a href="/welcome" class="nav-logo">Loan<span>IQ</span></a>
-    <div class="nav-links">
-        {% if current_user.is_admin %}
-        <a href="/admin">Admin Panel</a>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/history">All History</a>
-        {% else %}
-        <a href="/">Apply</a>
-        <a href="/history">History</a>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/calculator">EMI Calc</a>
-        <a href="/compare">Compare</a>
-        {% endif %}
-        <a href="/profile">Profile</a>
-        <a href="/change-password">Password</a>
-        <a href="/logout">Logout</a>
-        <button class="theme-btn" id="themeToggle">☀️</button>
+<div class="page-header">
+    <div class="page-header-eyebrow">{% if is_admin_view %}All users combined{% else %}Your applications{% endif %}</div>
+    <div class="page-header-title">Ledger Overview</div>
+</div>
+
+<div class="metrics-grid">
+    <div class="metric-card green-accent clickable" id="statApproved">
+        <div class="metric-label">Approved</div>
+        <div class="metric-value green">{{ approved }}</div>
     </div>
+    <div class="metric-card red-accent clickable" id="statRejected">
+        <div class="metric-label">Rejected</div>
+        <div class="metric-value red">{{ rejected }}</div>
     </div>
-</nav>
+    <div class="metric-card gold-accent">
+        <div class="metric-label">Avg Confidence</div>
+        <div class="metric-value gold">{{ avg_prob }}%</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-label">Avg Loan Amount</div>
+        <div class="metric-value">{{ avg_loan }}k</div>
+    </div>
+</div>
 
-<div class="container-wide">
-    <div class="card">
-
-        <div class="case-header">
-            <div class="case-ref">
-                {% if current_user.is_admin %}System-wide records{% else %}Your application records{% endif %}
-            </div>
-            <div class="case-title">Ledger overview</div>
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
+    <div>
+        <div class="section-label">Approval Breakdown</div>
+        <div class="chart-wrap" style="display:flex; align-items:center; justify-content:center;">
+            <canvas id="pieChart" width="220" height="220"></canvas>
         </div>
-
-        <!-- Stats as seal boxes -->
-        <div class="seal-row admin-seal-row">
-            <div class="seal-box seal-credit clickable" id="statApproved">
-                <div class="seal-label">Approved</div>
-                <div class="seal-value">{{ approved }}</div>
-            </div>
-            <div class="seal-box seal-debit clickable" id="statRejected">
-                <div class="seal-label">Rejected</div>
-                <div class="seal-value">{{ rejected }}</div>
-            </div>
-            <div class="seal-box">
-                <div class="seal-label">Avg confidence</div>
-                <div class="seal-value">{{ avg_prob }}%</div>
-            </div>
-            <div class="seal-box">
-                <div class="seal-label">Avg loan</div>
-                <div class="seal-value">{{ avg_loan }}k</div>
-            </div>
-        </div>
-
-        <div class="ledger-section-head">
-            <span>Approval breakdown</span>
-            <span style="color:var(--ink-faint); text-transform:none; letter-spacing:normal; font-size:11px;">click a slice to filter</span>
-        </div>
-        <div class="chart-wrap ledger-chart-wrap">
-            <canvas id="pieChart" width="260" height="260"></canvas>
-        </div>
-
-        <div class="ledger-section-head" style="margin-top:24px;">
-            <span>30-day trend</span>
-        </div>
-        <div class="chart-wrap ledger-chart-wrap" style="padding:24px 16px;">
+    </div>
+    <div>
+        <div class="section-label">30-Day Trend</div>
+        <div class="chart-wrap">
             <canvas id="trendChart"></canvas>
-        </div>
-
-        <div class="ledger-section-head" style="margin-top:24px;">
-            <span>Feature weight</span>
-            <span style="color:var(--ink-faint); text-transform:none; letter-spacing:normal; font-size:11px;">hover for exact %</span>
-        </div>
-        <div class="chart-wrap ledger-chart-wrap" style="padding:24px 16px;">
-            <canvas id="fiChart"></canvas>
-        </div>
-
-        <div class="result-actions" style="margin-top:24px;">
-            {% if current_user.is_admin %}
-            <a href="/admin" class="btn btn-primary">Admin Panel</a>
-            {% else %}
-            <a href="/" class="btn btn-primary">New Application</a>
-            {% endif %}
-            <a href="/history" class="btn btn-ghost">View History</a>
-            <a href="/export-csv" class="btn btn-ghost">⬇ Export CSV</a>
         </div>
     </div>
 </div>
 
-<script src="{{ url_for('static', filename='js/theme.js') }}"></script>
-<script>
-// Read live theme colors so charts adapt to dark/light mode
-const isLight   = document.documentElement.getAttribute('data-theme') === 'light';
-const textColor = isLight ? '#6B6458' : '#8A8576';
-const tickColor = isLight ? '#0B0E14' : '#F4F1E8';
-const gridColor = isLight ? 'rgba(11,14,20,0.06)' : 'rgba(244,241,232,0.04)';
-const brass     = '#B8902F';
-const brassLite = '#D4AF52';
-const ledgerGrn = '#4ADE94';
-const stampRed  = '#E8746B';
+<div class="section-label">Feature Importance</div>
+<div class="chart-wrap">
+    <canvas id="fiChart" style="max-height:280px;"></canvas>
+</div>
 
-const tooltipBase = {
-    backgroundColor: '#0B0E14',
-    titleColor: brass,
-    bodyColor: '#F4F1E8',
-    borderColor: 'rgba(184,144,47,0.3)',
+<script>
+const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+const tc  = isLight ? '#475569' : '#64748B';
+const tc2 = isLight ? '#0F172A' : '#94A3B8';
+const gc  = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.04)';
+
+const tip = {
+    backgroundColor: '#161A22',
+    titleColor: '#F0B429',
+    bodyColor: '#F1F5F9',
+    borderColor: 'rgba(240,180,41,0.2)',
     borderWidth: 1,
-    padding: 12,
-    titleFont: { family: 'IBM Plex Mono', size: 11, weight: '600' },
-    bodyFont:  { family: 'DM Sans', size: 12 },
-    cornerRadius: 4,
-    displayColors: true
+    padding: 10,
+    cornerRadius: 6,
+    titleFont: { family: 'JetBrains Mono', size: 11 },
+    bodyFont: { family: 'Inter', size: 12 }
 };
 
-// ── Approval doughnut — click-to-filter ────────
 new Chart(document.getElementById('pieChart').getContext('2d'), {
     type: 'doughnut',
     data: {
         labels: ['Approved', 'Rejected'],
-        datasets: [{
-            data: [{{ approved }}, {{ rejected }}],
-            backgroundColor: [ledgerGrn + 'CC', stampRed + 'CC'],
-            hoverBackgroundColor: [ledgerGrn, stampRed],
-            borderColor: ['#0B0E14', '#0B0E14'],
-            borderWidth: 3,
-            hoverOffset: 8
-        }]
+        datasets: [{ data: [{{ approved }}, {{ rejected }}],
+            backgroundColor: ['rgba(52,211,153,0.8)', 'rgba(248,113,113,0.8)'],
+            hoverBackgroundColor: ['#34D399', '#F87171'],
+            borderColor: ['#161A22','#161A22'], borderWidth: 3, hoverOffset: 6 }]
     },
     options: {
-        cutout: '70%',
-        onHover: (event, elements) => {
-            event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
-        },
-        onClick: (event, elements) => {
-            if (elements.length) {
-                const label = elements[0].index === 0 ? 'Approved' : 'Rejected';
-                window.location.href = '/history?filter=' + label;
-            }
-        },
-        plugins: {
-            legend: {
-                position: 'bottom',
-                labels: { color: textColor, font: { family: 'DM Sans', size: 13 }, padding: 20 }
-            },
-            tooltip: {
-                ...tooltipBase,
-                callbacks: { label: (ctx) => `${ctx.label}: ${ctx.parsed} applications` }
-            }
-        }
+        cutout: '68%',
+        onHover: (e, el) => { e.native.target.style.cursor = el.length ? 'pointer' : 'default'; },
+        onClick: (e, el) => { if (el.length) window.location.href = '/history?filter=' + (el[0].index === 0 ? 'Approved' : 'Rejected'); },
+        plugins: { legend: { position: 'bottom', labels: { color: tc, font: { family: 'Inter', size: 12 }, padding: 16 } },
+            tooltip: { ...tip, callbacks: { label: ctx => `${ctx.label}: ${ctx.parsed}` } } }
     }
 });
 
-// ── Monthly trend line chart ───────────────────
-const trendDates    = {{ trend_dates | safe }};
-const trendApproved = {{ trend_approved | safe }};
-const trendRejected = {{ trend_rejected | safe }};
-
+const td = {{ trend_dates | safe }};
+const ta = {{ trend_approved | safe }};
+const tr = {{ trend_rejected | safe }};
 new Chart(document.getElementById('trendChart').getContext('2d'), {
     type: 'line',
     data: {
-        labels: trendDates.length ? trendDates : ['No data yet'],
+        labels: td.length ? td : ['No data'],
         datasets: [
-            {
-                label: 'Approved',
-                data: trendApproved,
-                borderColor: ledgerGrn,
-                backgroundColor: 'rgba(74,222,148,0.07)',
-                borderWidth: 2,
-                pointRadius: 4,
-                pointHoverRadius: 7,
-                pointBackgroundColor: ledgerGrn,
-                pointBorderColor: '#0B0E14',
-                pointBorderWidth: 2,
-                fill: true,
-                tension: 0.4
-            },
-            {
-                label: 'Rejected',
-                data: trendRejected,
-                borderColor: stampRed,
-                backgroundColor: 'rgba(231,116,107,0.07)',
-                borderWidth: 2,
-                pointRadius: 4,
-                pointHoverRadius: 7,
-                pointBackgroundColor: stampRed,
-                pointBorderColor: '#0B0E14',
-                pointBorderWidth: 2,
-                fill: true,
-                tension: 0.4
-            }
+            { label: 'Approved', data: ta, borderColor: '#34D399', backgroundColor: 'rgba(52,211,153,0.06)', borderWidth: 2, pointRadius: 3, pointHoverRadius: 6, pointBackgroundColor: '#34D399', fill: true, tension: 0.4 },
+            { label: 'Rejected', data: tr, borderColor: '#F87171', backgroundColor: 'rgba(248,113,113,0.06)', borderWidth: 2, pointRadius: 3, pointHoverRadius: 6, pointBackgroundColor: '#F87171', fill: true, tension: 0.4 }
         ]
     },
     options: {
         interaction: { mode: 'index', intersect: false },
-        plugins: {
-            legend: {
-                position: 'bottom',
-                labels: { color: textColor, font: { family: 'DM Sans', size: 13 }, padding: 20 }
-            },
-            tooltip: { ...tooltipBase, callbacks: { title: (items) => `Date: ${items[0].label}` } }
-        },
+        plugins: { legend: { position: 'bottom', labels: { color: tc, font: { family: 'Inter', size: 12 }, padding: 16 } }, tooltip: tip },
         scales: {
-            x: { ticks: { color: textColor, font: { size: 11 } }, grid: { color: gridColor } },
-            y: { ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor }, beginAtZero: true }
+            x: { ticks: { color: tc, font: { size: 11 } }, grid: { color: gc } },
+            y: { ticks: { color: tc, stepSize: 1 }, grid: { color: gc }, beginAtZero: true }
         }
     }
 });
 
-// ── Feature importance horizontal bar ──────────
-const fiLabels = {{ fi_labels | safe }};
-const fiValues = {{ fi_values | safe }};
-
+const fl = {{ fi_labels | safe }};
+const fv = {{ fi_values | safe }};
 new Chart(document.getElementById('fiChart').getContext('2d'), {
     type: 'bar',
-    data: {
-        labels: fiLabels,
-        datasets: [{
-            label: 'Importance (%)',
-            data: fiValues,
-            backgroundColor: brass + 'B3',
-            hoverBackgroundColor: brassLite,
-            borderColor: brass,
-            borderWidth: 1,
-            borderRadius: 3
-        }]
-    },
+    data: { labels: fl, datasets: [{ label: 'Importance (%)', data: fv,
+        backgroundColor: 'rgba(240,180,41,0.7)', hoverBackgroundColor: '#F0B429',
+        borderColor: 'rgba(240,180,41,0.9)', borderWidth: 1, borderRadius: 4 }] },
     options: {
         indexAxis: 'y',
-        onHover: (event, elements) => {
-            event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
-        },
-        plugins: {
-            legend: { display: false },
-            tooltip: { ...tooltipBase, callbacks: { label: (ctx) => `Importance: ${ctx.parsed.x}%` } }
-        },
+        onHover: (e, el) => { e.native.target.style.cursor = el.length ? 'pointer' : 'default'; },
+        plugins: { legend: { display: false }, tooltip: { ...tip, callbacks: { label: ctx => `Importance: ${ctx.parsed.x}%` } } },
         scales: {
-            x: { ticks: { color: textColor }, grid: { color: gridColor } },
-            y: { ticks: { color: tickColor, font: { family: 'IBM Plex Mono', size: 11 } }, grid: { display: false } }
+            x: { ticks: { color: tc }, grid: { color: gc } },
+            y: { ticks: { color: tc2, font: { family: 'JetBrains Mono', size: 11 } }, grid: { display: false } }
         }
     }
 });
 
-// ── Stat box click-to-filter ────────────────────
-document.getElementById('statApproved').addEventListener('click', () => {
-    window.location.href = '/history?filter=Approved';
-});
-document.getElementById('statRejected').addEventListener('click', () => {
-    window.location.href = '/history?filter=Rejected';
-});
+document.getElementById('statApproved').addEventListener('click', () => window.location.href = '/history?filter=Approved');
+document.getElementById('statRejected').addEventListener('click', () => window.location.href = '/history?filter=Rejected');
 </script>
-</body>
-</html>
+{% endblock %}

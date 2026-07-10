@@ -1,100 +1,67 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LoanIQ — EMI Calculator</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+{% extends "base_user.html" %}
+{% block title %}EMI Calculator{% endblock %}
+{% block nav_calc %}active{% endblock %}
+{% block topbar_title %}<span>EMI Calculator</span>{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-eyebrow">Repayment schedule tool</div>
+    <div class="page-header-title">EMI Calculator</div>
+    <div class="page-header-sub">Calculate your monthly installment and interest breakdown</div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-</head>
-<body>
 
-<nav class="navbar">
-    <div class="navbar-inner">
-    <a href="/welcome" class="nav-logo">Loan<span>IQ</span></a>
-    <div class="nav-links">
-        <a href="/">Apply</a>
-        <a href="/history">History</a>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/calculator">EMI Calc</a>
-        <a href="/compare">Compare</a>
-        <a href="/profile">Profile</a>
-        <a href="/change-password">Password</a>
-        <a href="/logout">Logout</a>
-        <button class="theme-btn" id="themeToggle">☀️</button>
+<div class="card">
+    <div class="form-grid">
+        <div class="form-group">
+            <label>Loan Amount (₹)</label>
+            <input type="number" id="loanAmt" value="500000" min="1" placeholder="500000">
+        </div>
+        <div class="form-group">
+            <label>Annual Interest Rate (%)</label>
+            <input type="number" id="rate" value="8.5" step="0.1" min="0.1" placeholder="8.5">
+        </div>
+        <div class="form-group">
+            <label>Loan Tenure (months)</label>
+            <input type="number" id="tenure" value="360" min="1" placeholder="360">
+        </div>
     </div>
+    <div class="btn-row">
+        <button class="btn btn-primary" onclick="calcEMI()">Calculate</button>
+        <button class="btn btn-ghost" onclick="resetCalc()">Reset</button>
     </div>
-</nav>
 
-<div class="container">
-    <div class="card">
-        <div class="case-header">
-            <div class="case-ref">Repayment schedule calculator</div>
-            <div class="case-title">EMI calculator</div>
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label>Loan Amount (₹)</label>
-                <input type="number" id="loanAmt" placeholder="500000" value="500000" min="1">
+    <div id="emiResult" style="display:none; margin-top:28px;">
+        <div class="metrics-grid">
+            <div class="metric-card gold-accent">
+                <div class="metric-label">Monthly EMI</div>
+                <div class="metric-value gold" id="emiVal">—</div>
             </div>
-            <div class="form-group">
-                <label>Annual Interest Rate (%)</label>
-                <input type="number" id="rate" placeholder="8.5" value="8.5" step="0.1" min="0.1">
+            <div class="metric-card">
+                <div class="metric-label">Total Payment</div>
+                <div class="metric-value" id="totalVal">—</div>
             </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label>Loan Tenure (months)</label>
-                <input type="number" id="tenure" placeholder="360" value="360" min="1">
+            <div class="metric-card green-accent">
+                <div class="metric-label">Principal</div>
+                <div class="metric-value green" id="principalVal">—</div>
+            </div>
+            <div class="metric-card red-accent">
+                <div class="metric-label">Total Interest</div>
+                <div class="metric-value red" id="interestVal">—</div>
             </div>
         </div>
 
-        <div class="btn-row">
-            <button class="btn btn-primary" onclick="calcEMI()">Calculate</button>
-            <button class="btn btn-ghost" onclick="resetCalc()">Reset</button>
-        </div>
-
-        <div id="emiResult" style="display:none; margin-top:28px;">
-            <div class="seal-row">
-                <div class="seal-box">
-                    <div class="seal-label">Monthly EMI</div>
-                    <div class="seal-value" id="emiVal">—</div>
-                </div>
-                <div class="seal-box">
-                    <div class="seal-label">Total payment</div>
-                    <div class="seal-value" id="totalVal">—</div>
-                </div>
-                <div class="seal-box seal-credit">
-                    <div class="seal-label">Principal</div>
-                    <div class="seal-value" id="principalVal">—</div>
-                </div>
-                <div class="seal-box seal-debit">
-                    <div class="seal-label">Total interest</div>
-                    <div class="seal-value" id="interestVal">—</div>
-                </div>
-            </div>
-
-            <div class="ledger-section-head" style="margin-top:20px;">
-                <span>Principal vs interest breakdown</span>
-            </div>
-            <div class="ledger-chart-wrap">
-                <canvas id="emiChart" width="260" height="260"></canvas>
-            </div>
+        <div class="section-label">Breakdown</div>
+        <div class="chart-wrap" style="display:flex; align-items:center; justify-content:center;">
+            <canvas id="emiChart" width="220" height="220"></canvas>
         </div>
     </div>
 </div>
 
-<script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 <script>
 let emiChart = null;
-
-function fmt(n) {
-    return '₹' + Math.round(n).toLocaleString('en-IN');
-}
-function getThemeTextColor() {
-    return document.documentElement.getAttribute('data-theme') === 'light' ? '#6B6458' : '#8A8576';
-}
+function fmt(n) { return '₹' + Math.round(n).toLocaleString('en-IN'); }
 
 function calcEMI() {
     const P = parseFloat(document.getElementById('loanAmt').value);
@@ -102,7 +69,7 @@ function calcEMI() {
     const n = parseInt(document.getElementById('tenure').value);
     if (!P || !r || !n) return;
 
-    const emi      = (P * r * Math.pow(1+r, n)) / (Math.pow(1+r, n) - 1);
+    const emi      = (P * r * Math.pow(1+r,n)) / (Math.pow(1+r,n)-1);
     const total    = emi * n;
     const interest = total - P;
 
@@ -112,27 +79,19 @@ function calcEMI() {
     document.getElementById('interestVal').textContent  = fmt(interest);
     document.getElementById('emiResult').style.display  = 'block';
 
-    const ctx = document.getElementById('emiChart').getContext('2d');
     if (emiChart) emiChart.destroy();
-    emiChart = new Chart(ctx, {
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    emiChart = new Chart(document.getElementById('emiChart').getContext('2d'), {
         type: 'doughnut',
         data: {
             labels: ['Principal', 'Interest'],
-            datasets: [{
-                data: [Math.round(P), Math.round(interest)],
-                backgroundColor: ['rgba(74,222,148,0.85)', 'rgba(231,116,107,0.85)'],
-                borderColor: ['#0B0E14','#0B0E14'],
-                borderWidth: 3
-            }]
+            datasets: [{ data: [Math.round(P), Math.round(interest)],
+                backgroundColor: ['rgba(52,211,153,0.8)', 'rgba(248,113,113,0.8)'],
+                borderColor: ['#161A22','#161A22'], borderWidth: 3 }]
         },
         options: {
-            cutout: '70%',
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: { color: getThemeTextColor(), font: { family: 'DM Sans', size: 13 }, padding: 20 }
-                }
-            }
+            cutout: '68%',
+            plugins: { legend: { position: 'bottom', labels: { color: isLight ? '#475569' : '#64748B', font: { family: 'Inter', size: 12 }, padding: 16 } } }
         }
     });
 }
@@ -143,8 +102,6 @@ function resetCalc() {
     document.getElementById('tenure').value  = '360';
     document.getElementById('emiResult').style.display = 'none';
 }
-
 calcEMI();
 </script>
-</body>
-</html>
+{% endblock %}
