@@ -237,4 +237,3 @@ https://www.kaggle.com/datasets/altruistdelhite04/loan-prediction-problem-datase
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?logo=linkedin&logoColor=white)](https://linkedin.com/in/hassan-ali-datascientist)
 [![GitHub](https://img.shields.io/badge/GitHub-hassan--ali786-181717?logo=github&logoColor=white)](https://github.com/hassan-ali786)
-[![Kaggle](https://img.shields.io/badge/Kaggle-Datasets%20Master-20BEFF?logo=kaggle&logoColor=white)](https://kaggle.com/hassanali786)
